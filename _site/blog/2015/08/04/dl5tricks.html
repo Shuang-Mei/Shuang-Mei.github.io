@@ -1,0 +1,218 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta name="description" content="听见下雨的声音">
+  <meta name="author" content="陈汝丹">
+  <meta name="keywords" content="[DeepLearning]深度学习之五常见tricks, 陈汝丹, 陈汝丹">
+  <title>[DeepLearning]深度学习之五常见tricks - 陈汝丹</title>
+  <link rel="canonical" href="chenrudan.github.io/blog/2015/08/04/dl5tricks.html">
+  <link rel="icon" href="/res/img/favicon.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="/res/img/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="/res/css/public.css">
+  <link rel="stylesheet" href="/res/css/light.css">
+  <script src="/res/js/light.js"></script>
+  <script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+</head>
+<body>
+  <div id="blog">
+    <div class="sidebar">
+  <div class="profilepic">
+    <a href="/"><img src="http://7xkmdr.com1.z0.glb.clouddn.com/90fba609961616fae2b927.jpg" alt="logo"></img></a>
+  </div>
+  <h1 class="title"><a href="/">陈汝丹</a></h1>
+  <h2 class="sub-title">个人博客</h2>
+  <nav id="nav">
+    <ul>
+    
+      <li><a href="/page/timing.html"><i class="fa fa-clock-o"></i>&nbsp;时间轴</a></li>
+    
+      <li><a href="/page/category.html"><i class="fa fa-tags"></i>&nbsp;分类</a></li>
+    
+      <li><a href="/page/about.html"><i class="fa fa-paper-plane-o"></i>&nbsp;关于</a></li>
+    
+    </ul>
+  </nav>  
+  <nav id="sub-nav">
+    <a class="weibo " href="http://weibo.com/u/3842815916" title="新浪微博" target="_blank"><i class="fa fa-weibo"></i></a>
+    <a class="github" href="https://github.com/chenrudan" title="GitHub" target="_blank"><i class="fa fa-github fa-2x"></i></a>
+    <a class="rss" href="/page/feed.xml" title="RSS订阅" target="_blank"><i class="fa fa-rss"></i></a>
+  </nav>
+  <div id="license">
+    <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/cn/" target="_blank" title="本站所有作品采用：&#10;知识共享《署名 非商业性使用 相同方式共享 3.0》&#10;进行许可" >
+    <img alt="License" height="31" width="88" src="data:image/png;base64,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" /></a>
+  </div>
+</div>
+    <div class="main">
+    <header class="post-header">
+  <h1 class="post-title"><a href="/blog/2015/08/04/dl5tricks.html">[DeepLearning]深度学习之五常见tricks</a></h2>
+  <p class="post-meta">
+    <i class="fa fa-calendar"></i>
+    2015年08月04日
+    <i class="space"></i>
+    <i class="fa fa-tags"></i>
+    <a class="post-category" href="/page/category.html#project experience">project experience</a>
+  </p>
+</header>
+
+<div class="post-main">
+	<p>本文主要给出了在实现网络或者调节代码过程使用的以及平时看一些文章记录下来的一些小技巧，主要针对卷积网络和图像处理。就个人感受，有些技巧还是非常有效的，而且通常可以通过看开源库的一些文档或者源代码来发掘这些内容，最后能够称为自己所用。</p>
+
+<h4 id="validation-set">1.构造validation set</h4>
+
+<p>一般数据集可能不会给出验证集，所以自己会从给的训练集中按照一定比例（9：1）分离出验证集。</p>
+
+<h4 id="section">2.增加训练数据</h4>
+
+<p>为了更好的训练网络，有时候需要增加原始数据集，一般有以下方法[1]：</p>
+
+<ul>
+  <li>沿着x轴将图片左右翻转</li>
+  <li>随机的剪切、缩放、旋转</li>
+  <li>用pca来改变RGB的强度值，产生分别对应的特征值和特征向量，然后用均值为0方差为0.1的随机数与特征值和特征向量相乘得到新的数据[2]</li>
+</ul>
+
+<h4 id="section-1">3.预处理</h4>
+
+<p>常见的是减均值、除方差，还有变化到-1～1，主要针对不同尺度的特征，例如房价预测的例子中，每个房子的房屋大小和卧室数量就不在一个数量级上，这种情况就需要对每一维特征进行尺度变换normalize，还有的方法是使用pca白化。但是就图像处理领域，通常就减去一个均值就可以直接拿来计算。</p>
+
+<h4 id="section-2">4.权重初始化</h4>
+
+<p>不要全部初始化为0，这样会导致大部分的deltaw都一样，一般用高斯分布或者uniform分布。但是这样的分布会导致输出的方差随着输入单元个数而变大，因此需要除以fan in（输入个数的平方根）。</p>
+
+<h4 id="tricks">5.卷积tricks</h4>
+
+<ul>
+  <li>图片输入是2的幂次方，例如32、64、96、224等。</li>
+  <li>卷积核大小是3*3或者5*5。</li>
+  <li>输入图片上下左右需要用0补充，即padding，且假如卷积核大小是5那么padding就是2（图片左右上下都补充2），卷积核大小是3padding大小就是1。</li>
+</ul>
+
+<h4 id="poolingtricks">5.pooling层tricks</h4>
+
+<p>poolin层也能防止过拟合，使用overlapped pooling，即用来池化的数据有重叠，但是pooling的大小不要超过3。</p>
+
+<p>max pooling比avg pooling效果会好一些。</p>
+
+<h4 id="overfitting">6.避免overfitting</h4>
+
+<ul>
+  <li>drop out能够避免过拟[1]，一般在加在全连接层后面[3]，但是会导致收敛速度变慢。</li>
+  <li>正则化也能避免过拟合，L2正则l2正则惩罚了峰值权重，l1正则会导致稀疏权重，趋近于0，l1会趋向选择有用的输入。又或者可以给给权重矢量的模加上上边界（3 or 4），更新时对delta w进行归一化。</li>
+</ul>
+
+<h4 id="section-3">7.调参</h4>
+
+<p>使用pretrain好的网络参数作为初始值。然后fine-tuning，此处可以保持前面层数的参数不变，只调节后面的参数。但是finetuning要考虑的是图片大小和跟原数据集的相关程度，如果相关性很高，那么只用取最后一层的输出，不相关数据多就要finetuning比较多的层。</p>
+
+<p>初始值设置为0.1，然后训练到一定的阶段除以2，除以5，依次减小。</p>
+
+<p>加入momentum项[2]，可以让网络更快的收敛。</p>
+
+<ul>
+  <li>节点数增加，learning rate要降低</li>
+  <li>层数增加，后面的层数learning rate要降低</li>
+</ul>
+
+<h4 id="section-4">9.激励函数</h4>
+
+<p>Sigmoid作为激励函数有饱和和梯度消失的现象，在接近输出值0和1的地方梯度接近于0（可通过sigmoid的分布曲线观察出）。因而可采用Rectified Linear Units(ReLUs)作为激励函数，这样会训练的快一些，但是relu比较脆弱，如果某次某个点梯度下降的非常多，权重被改变的特别多，那么这个点的激励可能永远都是0了，还有带参的prelu、产生随机值的rrelu等改进版本。但是leaky版本（0换成0.01）的效果并不是很稳定。</p>
+
+<h4 id="section-5">10.通过做图来观察网络训练的情况</h4>
+
+<p>可以画出随着不同参数训练集测试集的改变情况，观察它们的走势图来分析到底什么时候的参数比较合适。</p>
+
+<ul>
+  <li>不同学习率与loss的曲线图，横坐标是epoch，纵坐标是loss或者正确率</li>
+  <li>不同的batchsize与loss的曲线图，坐标同上</li>
+</ul>
+
+<h4 id="section-6">11.数据集不均衡</h4>
+
+<p>这种情况如果数据集跟imagenet的比较相近，可以直接用finetuning的方法，假如不相近，首先考虑重新构造数据集的每一类个数，再次可以减少数据量比较大的类（减采样），并且复制数据量比较小的类（增采样）。</p>
+
+<p>以上是在实现卷积神经网络中使用过的和平时看文章中提及到的一些技巧，大多数现在的开源软件都是已经实现好了，直接调用使用即可。</p>
+
+<p>参考：[1] <a href="http://cs231n.stanford.edu/">http://cs231n.stanford.edu/</a></p>
+
+<p>[2]<a href="http://lamda.nju.edu.cn/weixs/project/CNNTricks/CNNTricks.html">http://lamda.nju.edu.cn/weixs/project/CNNTricks/CNNTricks.html</a></p>
+
+<p>[3] <a href="http://www.cs.toronto.edu/~fritz/absps/imagenet.pdf">http://www.cs.toronto.edu/~fritz/absps/imagenet.pdf</a></p>
+
+</div>
+<div class="share">
+  <div class="bdsharebuttonbox">
+    <a href="#" class="bds_more" data-cmd="more"></a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+  </div>
+  <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"1","bdMiniList":["qzone","tsina","weixin","sqq"],"bdPic":"","bdStyle":"0","bdSize":"16"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='/res/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+</div>
+<div class="pagination">
+	
+	<a class="pagination-item newer" href="/blog/2015/07/22/cudastream.html"><i class="fa fa-arrow-left"></i>&nbsp;&nbsp;【CUDA】cuda stream和event相关内容</a>
+	
+
+	<a class="pagination-item older" href="/blog/2015/10/26/installcaffe.html">---Ubuntu 14.04下配置caffe---&nbsp;&nbsp;<i class="fa fa-arrow-right"></i></a>
+	
+</div>
+    
+<i class="space"></i>
+
+<!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="/blog/2015/08/04/dl5tricks.html" data-title="[DeepLearning]深度学习之五常见tricks" data-url="/blog/2015/08/04/dl5tricks.html"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"chenrudan"};
+		(function() {
+ 			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			|| document.getElementsByTagName('body')[0]).appendChild(ds);
+											
+ 		})();
+		</script>
+	<!-- 多说公共JS代码 end -->
+	
+
+    <footer>Copyright&nbsp;&copy;&nbsp;2015 <a href="chenrudan.github.io">陈汝丹</a><br/><i class="fa fa-cogs" style="color:blueviolet;">&nbsp;</i>Powered by <a href="http://jekyllrb.com/" target="_blank">Jekyll</a></footer>
+    </div>
+  </div>    
+  <div id="top"><a id="rocket" href="javascript:;" title="返回顶部"><i></i></a></div>
+  
+</body>
+</html>
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+   (i[r].q=i[r].q||[]).push(arguments)
+ },i[r].l=1*new Date();a=s.createElement(o),
+   m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-62560044-1', 'auto');
+    ga('send', 'pageview');
+
+</script>
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	                  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+					                            
+	});
+</script>
+<script type="text/javascript"
+  src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>

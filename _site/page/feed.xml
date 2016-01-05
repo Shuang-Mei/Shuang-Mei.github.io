@@ -1,0 +1,1011 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>RSS - 陈汝丹</title>
+    <description>陈汝丹 - 个人博客</description>
+    <link>chenrudan.github.io</link>
+    <atom:link href="chenrudan.github.io/page/feed.xml" rel="self" type="application/rss+xml" />
+    <pubDate>Mon, 21 Dec 2015 20:33:27 +0800</pubDate>
+    <lastBuildDate>Mon, 21 Dec 2015 20:33:27 +0800</lastBuildDate>
+    <generator>陈汝丹</generator>
+    
+      <item>
+        <title>从深度学习选择什么样的gpu来谈谈gpu的硬件架构</title>
+        <description>&lt;p&gt;从深度学习在2012年大放异彩，gpu计算也走入了人们的视线之中，它使得大规模计算神经网络成为可能。人们可以通过07年推出的CUDA(Compute Unified Device Architecture)用代码来控制gpu进行并行计算。本文首先根据显卡一些参数来推荐何种情况下选择何种gpu显卡，然后谈谈跟cuda编程比较相关的硬件架构。&lt;/p&gt;
+
+&lt;h4 id=&quot;gpu&quot;&gt;1.选择怎样的GPU型号&lt;/h4&gt;
+
+&lt;p&gt;这几年主要有AMD和NVIDIA在做显卡，到目前为止，NVIDIA公司推出过的GeForce系列卡就有几百张[1]，虽然不少都已经被淘汰了，但如何选择适合的卡来做算法也是一个值得思考的问题，Tim Dettmers[2]的文章给出了很多有用的建议，根据自己的理解和使用经历(其实只用过GTX 970…)我也给出一些建议。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://7xkmdr.com1.z0.glb.clouddn.com/choose-gpu.png&quot; alt=&quot;1&quot; height=&quot;80%&quot; width=&quot;80%&quot; hspace=&quot;100&quot; /&gt;&lt;/p&gt;
+
+&lt;font size=&quot;2&quot;&gt;&lt;center&gt;图1 GPU选择&lt;/center&gt;&lt;/font&gt;
+
+&lt;p&gt;上面并没有考虑笔记本的显卡，做算法加速的话还是选台式机的比较好。性价比最高的我觉得是GTX 980ti，从参数或者一些用户测评来看，性能并没有输给TITAN X多少，但价格却便宜不少。从图1可以看出，价位差不多的显卡都会有自己擅长的地方，根据自己的需求选择即可。要处理的数据量比较小就选择频率高的，要处理的数据量大就选显存大core数比较多的，有double的精度要求就最好选择kepler架构的。tesla的M40是专门为深度学习制作的，如果只有深度学习的训练，这张卡虽然贵，企业或者机构购买还是比较合适的(百度的深度学习研究院就用的这一款[2])，相对于K40单精度浮点运算性能是4.29Tflops，M40可以达到7Tflops。QUADRO系列比较少被人提起，它的M6000价格比K80还贵，性能参数上也并没有好多少。&lt;/p&gt;
+
+&lt;p&gt;在挑选的时候要注意的几个参数是处理器核心(core)、工作频率、显存位宽、单卡or双卡。有的人觉得位宽最重要，也有人觉得核心数量最重要，我觉得对深度学习计算而言处理器核心数和显存大小比较重要。这些参数越多越高是好，但是程序相应的也要写好，如果无法让所有的core都工作，资源就被浪费了。而且在购入显卡的时候，如果一台主机插多张显卡，要注意电源的选择。&lt;/p&gt;
+
+&lt;h4 id=&quot;section&quot;&gt;2.一些常见的名称含义&lt;/h4&gt;
+
+&lt;p&gt;上面聊过了选择什么样的gpu，这一部分介绍一些常见名词。随着一代一代的显卡性能的更新，从硬件设计上或者命名方式上有很多的变化与更新，其中比较常见的有以下一些内容。&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;gpu架构：Tesla、Fermi、Kepler、Maxwell、Pascal&lt;/li&gt;
+  &lt;li&gt;芯片型号：GT200、GK210、GM104、GF104等&lt;/li&gt;
+  &lt;li&gt;显卡系列：GeForce、Quadro、Tesla&lt;/li&gt;
+  &lt;li&gt;GeForce显卡型号：G/GS、GT、GTS、GTX&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;gpu架构指的是硬件的设计方式，例如流处理器簇中有多少个core、是否有L1 or L2缓存、是否有双精度计算单元等等。每一代的架构是一种思想，如何去更好完成并行的思想，而芯片就是对上述思想的实现，芯片型号GT200中第二个字母代表是哪一代架构，有时会有100和200代的芯片，它们基本设计思路是跟这一代的架构一致，只是在细节上做了一些改变，例如GK210比GK110的寄存器就多一倍。有时候一张显卡里面可能有两张芯片，Tesla k80用了两块GK210芯片。这里第一代的gpu架构的命名也是Tesla，但现在基本已经没有这种设计的卡了，下文如果提到了会用Tesla架构和Tesla系列来进行区分。&lt;/p&gt;
+
+&lt;p&gt;而显卡系列在本质上并没有什么区别，只是NVIDIA希望区分成三种选择，GeFore用于家庭娱乐，Quadro用于工作站，而Tesla系列用于服务器。Tesla的k型号卡为了高性能科学计算而设计，比较突出的优点是双精度浮点运算能力高并且支持ECC内存，但是双精度能力好在深度学习训练上并没有什么卵用，所以Tesla系列又推出了M型号来做专门的训练深度学习网络的显卡。需要注意的是Tesla系列没有显示输出接口，它专注于数据计算而不是图形显示。&lt;/p&gt;
+
+&lt;p&gt;最后一个GeForce的显卡型号是不同的硬件定制，越往后性能越好，时钟频率越高显存越大，即G/GS&amp;lt;GT&amp;lt;GTS&amp;lt;GTX。&lt;/p&gt;
+
+&lt;h4 id=&quot;gpu-1&quot;&gt;3.gpu的部分硬件&lt;/h4&gt;
+
+&lt;p&gt;这一部分以下面的GM204硬件图做例子介绍一下GPU的几个主要硬件(图片可以点击查看大图，不想图片占太多篇幅)[3]。这块芯片它是随着GTX 980和970一起出现的。一般而言，gpu的架构的不同体现在流处理器簇的不同设计上(从Fermi架构开始加入了L1、L2缓存硬件)，其他的结构大体上相似。主要包括主机接口(host interface)、复制引擎(copy engine)、流处理器簇(Streaming Multiprocessors)、图形处理簇GPC(graphics processing clusters)、内存等等。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://7xkmdr.com1.z0.glb.clouddn.com/gm204hardware.png&quot; alt=&quot;1&quot; height=&quot;30%&quot; width=&quot;30%&quot; hspace=&quot;390&quot; /&gt;&lt;/p&gt;
+
+&lt;font size=&quot;2&quot;&gt;&lt;center&gt;图2 GM204芯片结构&lt;/center&gt;&lt;/font&gt;
+
+&lt;p&gt;主机接口，它连接了gpu卡和PCI Express，它主要的功能是读取程序指令并分配到对应的硬件单元，例如某块程序如果在进行内存复制，那么主机接口会将任务分配到复制引擎上。&lt;/p&gt;
+
+&lt;p&gt;复制引擎(图中没有表示出来)，它完成gpu内存和cpu内存之间的复制传递。当gpu上有复制引擎时，复制的过程是可以与核函数的计算同步进行的。随着gpu卡的性能变得强劲，现在深度学习的瓶颈已经不在计算速度慢，而是数据的读入，如何合理的调用复制引擎是一个值得思考的问题。&lt;/p&gt;
+
+&lt;p&gt;流处理器簇SM是gpu最核心的部分，这个翻译参考的是GPU编程指南，SM由一系列硬件组成，包括warp调度器、寄存器、Core、共享内存等。它的设计和个数决定了gpu的计算能力，一个SM有多个core，每个core上执行线程，core是实现具体计算的处理器，如果core多同时能够执行的线程就多，但是并不是说core越多计算速度一定更快，最重要的是让core全部处于工作状态，而不是空闲。不同的架构可能对它命名不同，kepler叫SMX，maxwell叫SMM，实际上都是SM。而GPC只是将几个sm组合起来，在做图形显示时有调度，一般在写gpu程序不需要考虑这个东西，只要掌握SM的结构合理的分配SM的工作即可。&lt;/p&gt;
+
+&lt;p&gt;图中的内存控制器控制的是L2内存，每个大小为512KB。&lt;/p&gt;
+
+&lt;h4 id=&quot;section-1&quot;&gt;4.流处理器簇的结构&lt;/h4&gt;
+
+&lt;p&gt;上面介绍的是gpu的整个硬件结构，这一部分专门针对流处理器簇SM来分析它内部的构造是怎样的。首先要明白的是，gpu的设计是为了执行大量简单任务，不像cpu需要处理的是复杂的任务，gpu面对的问题能够分解成很多可同时独立解决的部分，在代码层面就是很多个线程同时执行相同的代码，所以它相应的设计了大量的简单处理器，也就是stream process，在这些处理器上进行整形、浮点型的运算。下图给出了GK110的SM结构图。它属于kepler架构，与之前的架构比较大的不同是加入了双精度浮点运算单元，即图中的DP Unit。所以用kepler架构的显卡进行双精度计算是比较好的。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://7xkmdr.com1.z0.glb.clouddn.com/keplersmx.png&quot; alt=&quot;1&quot; height=&quot;30%&quot; width=&quot;30%&quot; hspace=&quot;390&quot; /&gt;&lt;/p&gt;
+
+&lt;font size=&quot;2&quot;&gt;&lt;center&gt;图2 GK110的SMX结构图&lt;/center&gt;&lt;/font&gt;
+
+&lt;p&gt;上面提到过的一个SM有多个core或者叫流处理器，它是gpu的运算单元，做整形、浮点型计算。可以认为在一个core上一次执行一个线程，GK110的一个SM有192个core，因此一次可以同时执行192个线程。core的内部结构可以查看[4]，实现算法一般不会深究到core的结构层面。SFU是特殊函数单元，用来计算log/exp/sin/cos等。DL/ST是指Load/Store，它在读写线程执行所需的全局内存、局部内存等。&lt;/p&gt;
+
+&lt;p&gt;一个SM有192个core，8个SM有1536个core，这么多的线程并行执行需要有统一的管理，假如gpu每次在1536个core上执行相同的指令，而需要计算这一指令的线程不足1536个，那么就有core空闲，这对资源就是浪费，因此不能对所有的core做统一的调度，从而设计了warp(线程束)调度器。32个线程一组称为线程束，32个线程一组执行相同的指令，其中的每个thread称为lane。一个线程束接受同一个指令，里面的32个线程同时执行，不同的线程束可执行不同指令，那么就不会出现大量线程空闲的问题了。但是在线程束调度上还是存在一些问题，假如某段代码中有if…else…，在调度一整个线程束32个线程的时候不可能做到给thread0~15分配分支1的指令，给thread16~31分配分支2的指令(实际上gpu对分支的控制是，所有该执行分支1的线程执行完再轮到该执行分支2的线程执行)，它们获得的都是一样的指令，所以如果thread16~31是在分支2中它们就需要等待thread0~15一起完成分支1中的计算之后，再获得分支2的指令，而这个过程中，thread0～15又在等待thread16~31的工作完成，从而导致了线程空闲资源浪费。因此在真正的调度中，是半个warp执行相同指令，即16个线程执行相同指令，那么给thread0~15分配分支1的指令，给thread16~31分配分支2的指令，那么一个warp就能够同时执行两个分支。这就是图中Warp Scheduler下为什么会出现两个dispatch的原因。&lt;/p&gt;
+
+&lt;p&gt;另外一个比较重要的结构是共享内存shared memory。它存储的内容在一个block(暂时认为是比线程束32还要大的一些线程个数集合)中共享，一个block中的线程都可以访问这块内存，它的读写速度比全局内存要快，所以线程之间需要通信或者重复访问的数据往往都会放在这个地方。在kepler架构中，一共有64kb的空间大小，供共享内存和L1缓存分配，共享内存实际上也可看成是L1缓存，只是它能够被用户控制。假如共享内存占48kb那么L1缓存就占16kb等。在maxwell架构中共享内存和L1缓存分开了，共享内存大小是96kb。而寄存器的读写速度又比共享内存要快，数量也非常多，像GK110有65536个。&lt;/p&gt;
+
+&lt;p&gt;此外，每一个SM都设置了独立访问全局内存、常量内存的总线。常量内存并不是一块内存硬件，而是全局内存的一种虚拟形式，它跟全局内存不同的是能够高速缓存和在线程束中广播数据，因此在SM中有一块常量内存的缓存，用于缓存常量内存。&lt;/p&gt;
+
+&lt;h4 id=&quot;section-2&quot;&gt;5.小结&lt;/h4&gt;
+
+&lt;p&gt;本文谈了谈gpu的一些重要的硬件组成，就深度学习而言，我觉得对内存的需求还是比较大的，core多也并不是能够全部用上，但现在开源的库实在完整，想做卷积运算有cudnn，想做卷积神经网络caffe、torch，想做rnn有mxnet、tensorflow等等，这些库内部对gpu的调用做的非常好并不需用户操心，但了解gpu的一些内部结构也是很有意思的。&lt;/p&gt;
+
+&lt;p&gt;另，一开始接触GPU并不知道是做图形渲染的…所以有些地方可能理解有误，主要基于计算来讨论GPU的构造。&lt;/p&gt;
+
+&lt;p&gt;参考：&lt;/p&gt;
+
+&lt;p&gt;[1] &lt;a href=&quot;https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units&quot;&gt;List of Nvidia graphics processing units&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;[2] &lt;a href=&quot;http://www.nextplatform.com/2015/12/11/inside-the-gpu-clusters-that-power-baidus-neural-networks/&quot;&gt;Inside the GPU Clusters that Power Baidu’s Neural Networks&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;[3] &lt;a href=&quot;http://international.download.nvidia.com/geforce-com/international/pdfs/GeForce_GTX_980_Whitepaper_FINAL.PDF&quot;&gt;Whitepaper NVIDIA GeForce GTX 980&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;[4] &lt;a href=&quot;https://developer.nvidia.com/content/life-triangle-nvidias-logical-pipeline&quot;&gt;Life of a triangle - NVIDIA’s logical pipeline&lt;/a&gt;&lt;/p&gt;
+</description>
+        <pubDate>Sun, 20 Dec 2015 00:00:00 +0800</pubDate>
+        <link>chenrudan.github.io/blog/2015/12/20/introductionofgpuhardware.html</link>
+        <guid isPermaLink="true">chenrudan.github.io/blog/2015/12/20/introductionofgpuhardware.html</guid>
+        
+        <category>project experience</category>
+        
+      </item>
+    
+      <item>
+        <title>EM算法实例分析</title>
+        <description>&lt;p&gt;最近两天研究了一下EM算法，主要是基于《统计学习方法》和论文《What is the expectation maximization algorithm?》[1]，但是对两个文章里面给的实例求解过程都比较的困惑，搜索网上的一些博客也没有找到对应的求解过程，自己就仔细研究了一下，中间也遇到了一些坑，现在把解题思路给出来。因为书上和网上的博客[2]对EM算法的推导和证明解释的非常清楚，本文就不做解释了，如果对EM算法原理不清楚的建议先看看《统计学习方法》第9章或者博客[2][3]。本文只给出两个文章中的例子的求解过程。&lt;/p&gt;
+
+&lt;p&gt;(题目我会列出来，如果不是看这个两个文章而了解EM算法的也不要紧，题目是通用的)&lt;/p&gt;
+
+&lt;p&gt;本文中观测数据记为Y(因为两个例子都是输出是观测数据)，隐藏变量(未观测变量)记为z，模型参数记为$\theta$。&lt;/p&gt;
+
+&lt;h4 id=&quot;section&quot;&gt;1.三硬币模型&lt;/h4&gt;
+
+&lt;p&gt;假设有三枚硬币A、B、C，每个硬币正面出现的概率是$\pi、p、q$。进行如下的掷硬币实验：先掷硬币A，正面向上选B，反面选C；然后掷选择的硬币，正面记1，反面记0。独立的进行10次实验，结果如下：1，1，0，1，0，0，1，0，1，1。假设只能观察最终的结果(0 or 1)，而不能观测掷硬币的过程(不知道选的是B or C)，问如何估计三硬币的正面出现的概率？&lt;/p&gt;
+
+&lt;p&gt;首先针对某个输出y值，它在参数$\theta (\theta=(\pi, p, q))$下的概率分布为&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;
+P(y|\theta )=\sum_{z}P(y,z|\theta)=\sum_{z}P(z|\theta)P(y|z, \theta) = \pi p^y (1-p)^{1-y} + (1-\pi) q^y (1-q)^{1-y}
+&lt;/script&gt;
+
+&lt;p&gt;从而针对观测数据$Y=(y_1, y_2, \cdot\cdot\cdot, y_n)^T$的似然函数为&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;
+P(Y|\theta ) =\sum_{z}P(Y,z|\theta)=\sum_{z}P(z|\theta)P(Y|z, \theta) = \prod _{j=1} ^{n} \pi p^y_j (1-p)^{1-y_j} + (1-\pi) q^y_j (1-q)^{1-y_j}
+&lt;/script&gt;
+
+&lt;p&gt;因此本题的目标是求解参数$\theta$的极大似然估计，即$\hat{\theta} = \underset{\theta }{argmax}logP(Y|\theta)$。直接对连乘的似然函数求导太复杂，所以一般用极大似然估计都会转化成对数似然函数，但是就算转化成了求和，如果这个式子对某个参数(例如$\pi$)求导，由于这个式子中有“和的对数”，求导非常复杂。因此这个问题需要用EM算法来求解。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;E步&lt;/strong&gt;:根据EM算法，在这一步需要计算的是未观测数据的条件概率分布，也就是每一个$P(z|y_j, \theta)$，$\mu^{i+1}$表示在已知的模型参数$\theta^i$下观测数据$y_j$来自掷硬币B的概率，相应的来自掷C的概率就是$1-\mu^{i+1}$。&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\mu ^{i+1} = \frac {\pi^i ({p^i})^{y_j}(1-p^i)^{1-y_j}} {\pi^i ({p^i})^{y_j}(1-p^i)^{1-y_j} + (1-\pi^i) ({q^i})^{y_j} (1-q^i)^{1-y_j}}&lt;/script&gt;
+
+&lt;p&gt;这里的分子就是z取掷硬币B和y的联合概率分布，需要注意的是，这里的$\mu^{i+1}$通过E步的计算就已经是一个常数了，后面的求导不需要把这个式子代入。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;M步&lt;/strong&gt;:针对Q函数求导，Q函数的表达式是&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;Q(\theta, \theta^i) = \sum_{j=1}^N \sum_{z} P(z|y_j, \theta^i)logP(y_j, z|\theta)=\sum_{j=1}^N \mu_jlog(\pi p^{y_j}(1-p)^{1-y_j}) + (1-\mu_j)log((1-\pi) q^{y_j} (1-q)^{1-y_j})] &lt;/script&gt;
+
+&lt;p&gt;最开始求导犯了一个大错，没有将表达式展开来求，这样就直接默认$\mu_j$是一个系数，求导将它给约去了，这样就得不到最后的结果。&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{\partial Q}{\partial \pi} = (\frac{\mu_1}{\pi} - \frac{1-\mu_1}{1-\pi})+\cdot \cdot \cdot + (\frac{\mu_N}{\pi} - \frac{1-\mu_N}{1-\pi}) = \frac{\mu_1-\pi}{\pi(1-\pi)} + \cdot \cdot \cdot + \frac{\mu_N-\pi}{\pi(1-\pi)} = \frac{\sum _{j=1} ^N\mu_j-N\pi}{\pi(1-\pi)}&lt;/script&gt;
+
+&lt;p&gt;再令这个结果等于0，即获得$\pi^{i+1} = \frac{1}{N}\sum_{j=1}^{N}\mu_j^{i+1}$，其他两个也同理。&lt;/p&gt;
+
+&lt;h4 id=&quot;section-1&quot;&gt;2.两硬币模型&lt;/h4&gt;
+
+&lt;p&gt;假设有两枚硬币A、B，以相同的概率随机选择一个硬币，进行如下的掷硬币实验：共做5次实验，每次实验独立的掷十次，结果如图中a所示，例如某次实验产生了H、T、T、T、H、H、T、H、T、H，H代表证明朝上。a是在知道每次选择的是A还是B的情况下进行，b是在不知道选择的硬币情况下进行，问如何估计两个硬币正面出现的概率？&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://7xkmdr.com1.z0.glb.clouddn.com/em1.png&quot; alt=&quot;1&quot; height=&quot;50%&quot; width=&quot;50%&quot; hspace=&quot;200&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;针对a情况，已知选择的A or B，重点是如何计算输出的概率分布，论文中直接统计了5次实验中A正面向上的次数再除以总次数作为A的$\hat{\theta_A}$，这其实也是极大似然求导求出来的。 &lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\underset{\theta }{argmax}logP(Y|\theta) = log((\theta_B^5(1-\theta_B)^5) (\theta_A^9(1-\theta_A))(\theta_A^8(1-\theta_A)^2) (\theta_B^4(1-\theta_B)^6) (\theta_A^7(1-\theta_A)^3) ) = log(   (\theta_A^{24}(1-\theta_A)^6) (\theta_B^9(1-\theta_B)^{11})  )&lt;/script&gt;
+
+&lt;p&gt;上面这个式子求导之后就能得出$\hat{\theta_A} = \frac{24}{24 + 6} = 0.80$以及$\hat{\theta_B} = \frac{9}{9 + 11} = 0.45$。&lt;/p&gt;
+
+&lt;p&gt;针对b情况，由于并不知道选择的是A还是B，因此采用EM算法。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;E步&lt;/strong&gt;:计算在给定的$\hat{\theta_A^{(0)}}$和$\hat{\theta_B^{(0)}}$下，选择的硬币可能是A or B的概率，例如第一个实验中选择A的概率为(由于选择A、B的过程是等概率的，这个系数被我省略掉了)&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;P(z=A|y_1, \theta) = \frac {P(z=A, y_1|\theta)}{P(z=A,y_1|\theta) + P(z=B,y_1|\theta)} = \frac{(0.6)^5*(0.4)^5}{(0.6)^5*(0.4)^5+(0.5)^{10}} = 0.45&lt;/script&gt;
+
+&lt;p&gt;&lt;strong&gt;M步&lt;/strong&gt;:针对Q函数求导，在本题中Q函数形式如下，参数设置参照例1，只是这里的$y_j$代表的是每次正面朝上的个数。&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;Q(\theta, \theta^i) = \sum_{j=1}^N \sum_{z} P(z|y_j, \theta^i)logP(y_j, z|\theta)=\sum_{j=1}^N \mu_jlog(\theta_A^{y_j}(1-\theta_A)^{10-y_j}) + (1-\mu_j)log(\theta_B^{y_j}(1-\theta_B)^{10-y_j})]&lt;/script&gt;
+
+&lt;p&gt;从而针对这个式子来对参数求导，例如对$\theta_A$求导&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{\partial Q}{\partial \theta_A} = \mu_1(\frac{y_1}{\theta_A}-\frac{10-y_1}{1-\theta_A}) + \cdot \cdot \cdot  + \mu_5(\frac{y_5}{\theta_A}-\frac{10-y_5}{1-\theta_A}) 
+= \mu_1(\frac{y_1 - 10\theta_A} {\theta_A(1-\theta_A)}) + \cdot \cdot \cdot +\mu_5(\frac{y_5 - 10\theta_A} {\theta_A(1-\theta_A)})  = \frac{\sum_{j=1}^5 \mu_jy_j - \sum_{j=1}^510\mu_j\theta_A} {\theta_A(1-\theta_A)}&lt;/script&gt;
+
+&lt;p&gt;求导等于0之后就可得到图中的第一次迭代之后的参数值$\hat{\theta_A^{(1)}} = 0.71$和$\hat{\theta_B^{(1)}} = 0.58$。&lt;/p&gt;
+
+&lt;p&gt;这个例子可以非常直观的看出来，EM算法在求解M步是将每次实验硬币取A或B的情况都考虑进去了。&lt;/p&gt;
+
+&lt;h4 id=&quot;section-2&quot;&gt;3.小结&lt;/h4&gt;
+
+&lt;p&gt;EM算法将不完全数据补全成完全数据，而E步并不是只取最可能补全的未观测数据，而是将未观测的数据的所有补全可能都计算出对应的概率值，从而对这些所有可能的补全计算出它们的期望值，作为下一步的未观测数据。至于为什么取期望，一是因为这个未观测数据本身就是基于一组不完全正确的参数估计出来的，例如三硬币例子假如每次在进行maximization之前都只取某一个值(极端一点，每次结果都是认为B是最可能的观测数据，而不算C)，那么在更新参数时，也只有B的参数在更新。二是这种情况下JENSEN不等式不成立，那么对$\theta$的似然函数变换形式就不成立，收敛也不成立。&lt;/p&gt;
+
+&lt;p&gt;这两个例子想明白之后求解实际上非常简单，所以很多博主并没把它们列出来，但如果一开始思考的方向不对就会浪费很多时间，当我把上面的过程想清楚之后再去求解别的例子，发现很轻松就能解出来。当然EM算法的核心还是证明和推导，这点别的文章讲的非常清晰了我就不赘述了。这也是数学上常用的思路，当无法直接对某个含参式子求极大值时，考虑对它的下界求极大值，当确定下界取极大值的参数时也能让含参式子值变大，也就是&lt;strong&gt;&lt;em&gt;不断求解下界的极大值逼近求解对数似然函数极大化(李航.《统计学习方法》)&lt;/em&gt;&lt;/strong&gt;。&lt;/p&gt;
+
+&lt;p&gt;如果本文有错误，请一定要指出来，感谢～&lt;/p&gt;
+
+&lt;h4 id=&quot;section-3&quot;&gt;4.参考：&lt;/h4&gt;
+
+&lt;p&gt;[1] &lt;a href=&quot;http://ai.stanford.edu/~chuongdo/papers/em_tutorial.pdf&quot;&gt;What is the expectation maximization
+algorithm?&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;[2] &lt;a href=&quot;http://www.cnblogs.com/jerrylead/archive/2011/04/06/2006936.html&quot;&gt;（EM算法）The EM Algorithm&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;[3] &lt;a href=&quot;http://blog.csdn.net/zouxy09/article/details/8537620&quot;&gt;从最大似然到EM算法浅解&lt;/a&gt;&lt;/p&gt;
+
+</description>
+        <pubDate>Wed, 02 Dec 2015 00:00:00 +0800</pubDate>
+        <link>chenrudan.github.io/blog/2015/12/02/emexample.html</link>
+        <guid isPermaLink="true">chenrudan.github.io/blog/2015/12/02/emexample.html</guid>
+        
+        <category>project experience</category>
+        
+      </item>
+    
+      <item>
+        <title>Caffe、TensorFlow、MXnet三个开源库对比</title>
+        <description>&lt;p&gt;最近Google开源了他们内部使用的深度学习框架TensorFlow[1]，结合之前开源的MXNet[2]和Caffe[3]，对三个开源库做了一些讨论，其中只有Caffe比较仔细的看过源代码，其他的两个库仅阅读官方文档和一些研究者的评论博客有感，本文首先对三个库有个整体的比较，再针对一些三者设计的不同数据结构、计算方式、gpu的选择方式等方面做了比较详细的讨论。表格1是三者的一些基本情况的记录和比较。其中示例指的是官方给出的example是否易读易理解，因为TensorFlow直接安装python包，所以一开始没有去下源代码，从文档中找example不如另外两个下源码直接。实际上TensorFlow更加像一套独立的python接口，它不止能够完成CNN/RNN的功能，还见到过有人用它做Kmeans聚类。这个表主观因素比较明显，仅供参考。&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;库名称&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;开发语言&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;支持接口&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;安装难度(ubuntu)&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;文档风格&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;示例&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;支持模型&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;上手难易&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Caffe&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;c++/cuda&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;c++/python/matlab&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;***&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;*&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;***&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;CNN&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;**&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;MXNet&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;c++/cuda&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;python/R/Julia&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;**&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;***&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;**&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;CNN/RNN&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;*&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;TensorFlow&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;c++/cuda/python&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;c++/python&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;*&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;**&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;*&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;CNN/RNN/…&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;***&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;font size=&quot;1.5&quot;&gt;安装难度: *(简单) --&amp;gt; ***(复杂)&lt;/font&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;font size=&quot;1.5&quot;&gt;文档风格: *(一般) --&amp;gt; ***(好看、全面)&lt;/font&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;font size=&quot;1.5&quot;&gt;示例: *(给的少) --&amp;gt; ***(给的多、全)&lt;/font&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;font size=&quot;1.5&quot;&gt;上手难易: *(易) --&amp;gt; ***(难)&lt;/font&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;section&quot;&gt;1.基本数据结构&lt;/h3&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;库名称&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;数据结构名称&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;设计方式&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Caffe&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Blob&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;存储的数据可以看成N维的c数组，有(n,k,h,w)四个维数，一个blob里面有两块数据空间保存前向和后向求导数据&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;MXNet&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;NDArray&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;提供cpu/gpu的矩阵和矢量计算，能够自动并行&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;TensorFlow&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;tensor&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;相当于N维的array或者list，维数可变，数据类型一旦定义不能改变&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;caffe的数据存储类blob，当把数据可以看成是一个N维的c数组，它们的存储空间连续。例如存储图片是4维(num, channel, height, width),变量(n,k,h,w)在数组中存储位置为((n*K+k)*H+h)*W+w。blob有以下三个特征[4]:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;两块数据，一个是原始data，一个是求导值diff&lt;/li&gt;
+  &lt;li&gt;两种内存分配方式，一种是分配在cpu上，一种是分配在gpu上，通过前缀cpu、gpu来区分&lt;/li&gt;
+  &lt;li&gt;两种访问方式，一种是不能改变数据，一种能改变数据&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Caffe最让我觉得精妙的地方在于一个blob保存前向和后向的数据。虽然就代码本身而言，前向数据是因为输入数据不同而改变，后向求导是因为求导不同而改变，根据SRP原则，在一个类里面因为两个原因而改变了数据这种是不合适的设计。但是从逻辑层面，前向数据的改变引起了反向求导的不同，它们实际上是一起在改变，本身应该是一个整体。所以我很喜欢这个设计，虽然基本上其他框架中都是将两个数据给分离出来，caffe2也不知是否保留。&lt;/p&gt;
+
+&lt;p&gt;MXNet的NDArray类似numpy.ndarray，也支持把数据分配在gpu或者cpu上进行运算。但是与numpy和caffe不同的是，当在操作NDArray，它能自动的将需要执行的数据分配到多台gpu和cpu上进行计算，从而完成高速并行。在调用者的眼中代码可能只是一个单线程的，数据只是分配到了一块内存中，但是背后执行的过程实际上是并行的。将指令(加减等)放入中间引擎，然后引擎来评估哪些数据有依赖关系，哪些能并行处理。定义好数据之后将它绑定到网络中就能处理它了。&lt;/p&gt;
+
+&lt;p&gt;TensorFlow的tensor，它相当于N维的array或者list，与MXNet类似，都是采用了以python调用的形式展现出来。某个定义好的tensor的数据类型是不变的，但是维数可以动态改变。用tensor rank和TensorShape来表示它的维数（例如rank为2可以看成矩阵，rank为1可以看成向量）。tensor是个比较中规中矩的类型。唯一特别的地方在于在TensorFlow构成的网络中，tensor是唯一能够传递的类型，而类似于array、list这种不能当成输入。&lt;/p&gt;
+
+&lt;p&gt;值得一提的是cuda-convnet采用的数据结构是NVMatrix，NV表示数据分配在gpu上，即将所有变量都当成矩阵来处理，它只有两维，它算是最早用cuda实现的深度学习框架，而上面三种框架都采用了多维可变维的思想，这种可变维在用矩阵做卷积运算的时候是很有效的。&lt;/p&gt;
+
+&lt;h3 id=&quot;section-1&quot;&gt;2.网络实现方式&lt;/h3&gt;
+
+&lt;p&gt;Caffe是典型的功能（过程）计算方式，它首先按照每一个大功能（可视化、损失函数、非线性激励、数据层）将功能分类并针对部分功能实现相应的父类，再将具体的功能实现成子类，或者直接继承Layer类，从而形成了XXXLayer的形式。然后将不同的layer组合起来就成了net。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://7xkmdr.com1.z0.glb.clouddn.com/caffe5.png&quot; alt=&quot;1&quot; height=&quot;25%&quot; width=&quot;25%&quot; hspace=&quot;400&quot; /&gt;&lt;/p&gt;
+
+&lt;font size=&quot;2&quot;&gt;&lt;center&gt;图1 caffe的网络结构&lt;/center&gt;&lt;/font&gt;
+
+&lt;p&gt;MXNet是符号计算和过程计算混合[5]，它设计了Symbol大类，提供了很多符号运算的接口，每个symbol定义了对数据进行怎样的处理，symbol只是定义处理的方式，这步还并未真正的执行运算。其中一个需要注意的是symbol里面有Variable，它作为承载数据的符号，定义了需要传递什么样的数据给某个Variable，并在后续的操作中将数据绑定到Variable上。下面的代码是一个使用示例，它实现了将激励函数连接到前面定义好的net后面，并给出了这一个symbol的名字和激励函数类型，从而构造出net。下图左边部分是定义symbol的合集，中间将数据绑定到Variable上之后变成了右边真正的执行流程图。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;net = mx.symbol.Activation(data=net, name=&#39;relu1&#39;, act_type=&quot;relu&quot;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://7xkmdr.com1.z0.glb.clouddn.com/compare2.png&quot; alt=&quot;1&quot; height=&quot;50%&quot; width=&quot;50%&quot; hspace=&quot;250&quot; /&gt;&lt;/p&gt;
+
+&lt;font size=&quot;2&quot;&gt;&lt;center&gt;图2 MXNet的网络结构&lt;/center&gt;&lt;/font&gt;
+
+&lt;p&gt;TensorFlow选择的是符号计算方式，它的程序分为计算构造阶段和执行阶段，构造阶段是构造出computation graph，computation graph就是包含一系列符号操作Operation和Tensor数据对象的流程图，跟mxnet的symbol类似，它定义好了如何进行计算（加减乘除等）、数据通过不同计算的顺序（也就是flow，数据在符号操作之间流动的感觉）。但是暂时并不读取输入来计算获得输出，而是由后面的执行阶段启动session的run来执行已经定义好的graph。这样的方式跟mxnet很相似，应该都是借鉴了theano的想法。其中TensorFlow还引入了Variable类型，它不像mxnet的Variable属于symbol（tf的operation类似mxnet的symbol），而是一个单独的类型，主要作用是存储网络权重参数，从而能够在运行过程中动态改变。tf将每一个操作抽象成了一个符号Operation，它能够读取0个或者多个Tensor对象作为输入(输出)，操作内容包括基本的数学运算、支持reduce、segment（对tensor中部分进行运算。例如tensor长度为10，可以同时计算前5个，中间2个，后面三个的和）、对image的resize、pad、crop、filpping、transposing等。tf没有像mxnet那样给出很好的图形解释或者实例(可能因为我没找到。。)，按照自己的理解画了一部分流程图。有点疑惑的是，为什么要设计Variable，tf给出的一个alexnet的example源码中，输入数据和权重都设置成了Variable，每一层的输出并未直接定义，按照tf的说法，只有tensor类型能够在网络中传递，输出的类型应该是tensor，但是由于输入和权重改变了，输出应该也在随着改变，既然如此，为何不只设计一个tensor，让tensor也能动态改变。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://7xkmdr.com1.z0.glb.clouddn.com/compare3.png&quot; alt=&quot;1&quot; height=&quot;20%&quot; width=&quot;20%&quot; hspace=&quot;450&quot; /&gt;&lt;/p&gt;
+
+&lt;font size=&quot;2&quot;&gt;&lt;center&gt;图3 TensorFlow的computation graph&lt;/center&gt;&lt;/font&gt;
+
+&lt;p&gt;就设计而言，TensorFlow相对于其他两个更像是一种通用的机器学习框架，而不是只针对cnn或rnn，但就现在的性能而言，tf的速度比很多开源框架都要差一点[6]。&lt;/p&gt;
+
+&lt;h3 id=&quot;section-2&quot;&gt;3.分布式训练&lt;/h3&gt;
+
+&lt;p&gt;Caffe和TensorFlow没有给出分布式的版本，MXNet提供了多机分布式，因而前两者只有如何控制使用多gpu。Caffe通过直接在执行指令后面加上&lt;strong&gt;&lt;em&gt;-gpu 0,1&lt;/em&gt;&lt;/strong&gt;来表示调用两个gpu0和1，只实现了数据并行，也就是在不同的gpu上执行相同网络和不同数据，caffe会实例化多个solver和net让每次处理的batch_size加倍。TensorFlow则能够自己定义某个操作执行在哪个gpu上，通过调用&lt;strong&gt;&lt;em&gt;with tf.device(‘/gpu:2’)&lt;/em&gt;&lt;/strong&gt;表示接下来的操作要在gpu2上处理，它也是数据并行。MXNet通过执行脚本时指定多机节点个数来确定在几台主机上运行，也是数据并行。MXNet的多gpu分配和它们之间数据同步是通过MXNet的数据同步控制KVStore来完成的。&lt;/p&gt;
+
+&lt;p&gt;KVStore的使用首先要创建一个kv空间，这个空间用来在不同gpu不同主机间分享数据，最基本的操作是push和pull，push是把数据放入这个空间，pull是从这个空间取数据。这个空间内保存的是key-value([int, NDArray])，在push/pull的时候来指定到哪个key。下面的代码将不同的设备上分配的b[i]通过key3在kv空间累加再输出到a，从而完成了对多gpu的处理。这个是个非常棒的设计，提供了很大的自由度，并且为开发者减少了控制底层数据传输的麻烦。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;gpus = [mx.gpu(i) for i in range(4)]	
+b = [mx.nd.ones(shape, gpu) for gpu in gpus]
+kv.push(3, b)
+kv.pull(3, out = a)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;之前有看过一篇论文，如何将卷积网络放在多gpu上训练，论文中有两种方法，一种是常用的数据并行，另一种是模型并行。模型并行指的是将一个完整的网络切分成不同块放在不同gpu上执行，每个gpu可能只处理某一张图的四分之一。采用模型并行很大程度上是因为显存不够放不下整个网络的数据，而现在gpu的功能性能提高，一个gpu已经能够很好的解决显存不够的问题，再加上模型并行会有额外的通信开销，因此开源框架采用了数据并行，用来提高并行度。&lt;/p&gt;
+
+&lt;h3 id=&quot;section-3&quot;&gt;4.小结&lt;/h3&gt;
+
+&lt;p&gt;上面针对三个框架的不同方面进行了一些分析与比较，可以看出TensorFlow和MXNet有一些相似的地方，都是想做成更加通用的深度学习框架，貌似caffe2也会采用符号计算[5]，说明以后的框架会更加的偏向通用性和高效，个人最喜欢的是caffe，也仿造它和cuda-convnet的结构写过卷积网络，如果是想提高编程能力可以多看看这两个框架的源码。而MXNet给人的感觉是非常用心，更加注重高效，文档也非常的详细，不仅上手很容易，运用也非常的灵活。TensorFlow则是功能很齐全，能够搭建的网络更丰富而不是像caffe仅仅局限在CNN。总之框架都是各有千秋，如何选择也仅凭个人的喜好，然而google这个大杀器一出现引起的关注度还是最大的，虽然现在单机性能还不够好，但是看着长长的开发人员名单，也只能说大牛多就是任性。&lt;/p&gt;
+
+&lt;p&gt;参考:&lt;/p&gt;
+
+&lt;p&gt;[1] &lt;a href=&quot;http://tensorflow.org/&quot;&gt;http://tensorflow.org/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;[2] &lt;a href=&quot;http://mxnet.readthedocs.org/en/latest/index.html&quot;&gt;http://mxnet.readthedocs.org/en/latest/index.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;[3] &lt;a href=&quot;http://caffe.berkeleyvision.org/&quot;&gt;http://caffe.berkeleyvision.org/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;[4] &lt;a href=&quot;http://chenrudan.github.io/blog/2015/05/07/cafferead.html&quot;&gt;[caffe]的项目架构和源码解析&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;[5] &lt;a href=&quot;http://weibo.com/p/1001603907610737775666&quot;&gt;如何评价Tensorflow和其它深度学习系统&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;[6] &lt;a href=&quot;https://github.com/soumith/convnet-benchmarks&quot;&gt;Imagenet Winners Benchmarking&lt;/a&gt;&lt;/p&gt;
+
+</description>
+        <pubDate>Wed, 18 Nov 2015 00:00:00 +0800</pubDate>
+        <link>chenrudan.github.io/blog/2015/11/18/comparethreeopenlib.html</link>
+        <guid isPermaLink="true">chenrudan.github.io/blog/2015/11/18/comparethreeopenlib.html</guid>
+        
+        <category>project experience</category>
+        
+      </item>
+    
+      <item>
+        <title>---Ubuntu 14.04下配置caffe---</title>
+        <description>&lt;p&gt;&lt;strong&gt;1.从github上下载源码&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;git clone https://github.com/BVLC/caffe.git
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;2.安装BLAS库&lt;/strong&gt;&lt;/p&gt;
+
+&lt;font size=&quot;3&quot;&gt;	选择安装mkl，在官网上下载学生版，解压到存放目录。先对解压后的文件授权&lt;/font&gt;
+
+&lt;pre&gt;&lt;code&gt;chmod a+x parallel_studio_xe_2015 -R
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;font size=&quot;3&quot;&gt;然后用root权限执行&lt;/font&gt;
+
+&lt;pre&gt;&lt;code&gt;sudo ./install.sh（一般都选择默认的选项）
+sudo vim /etc/ld.so.conf.d/intel_mkl.conf
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;font size=&quot;3&quot;&gt;配置环境，加入下面内容&lt;/font&gt;
+
+&lt;pre&gt;&lt;code&gt;/opt/intel/lib/intel64
+/opt/intel/mkl/lib/intel64
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;3.安装python依赖包&lt;/strong&gt;&lt;/p&gt;
+
+&lt;font size=&quot;3&quot;&gt;先安装python-pip&lt;/font&gt;
+
+&lt;pre&gt;&lt;code&gt;sudo apt-get install python-pip
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;font size=&quot;3&quot;&gt;然后进入caffe下的python文件夹，执行&lt;/font&gt;
+
+&lt;pre&gt;&lt;code&gt;for req in $(cat requirements.txt); do pip install $req; done
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;4.安装cmake&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sudo add-apt-repository ppa:george-edison55/cmake-3.x
+sudo apt-get update
+sudo apt-get install cmake
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;5.安装glog&lt;/strong&gt;&lt;/p&gt;
+
+&lt;font size=&quot;3&quot;&gt;https://github.com/google/glog.git(这个地址的安装包会报错，下载&lt;/font&gt;
+&lt;font size=&quot;3&quot; color=&quot;#FA8072&quot;&gt;0.3.3&lt;/font&gt;
+&lt;font size=&quot;3&quot;&gt;的)&lt;/font&gt;
+
+&lt;font size=&quot;3&quot;&gt;进入文件夹，执行&lt;/font&gt;
+
+&lt;pre&gt;&lt;code&gt;sudo ./configure
+sudo make 
+sudo make install
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;6.可以用apt-get安装的&lt;/strong&gt;&lt;/p&gt;
+
+&lt;font size=&quot;3&quot;&gt;sudo apt-get install libboost-all-dev libprotobuf-dev libsnappy-dev libleveldb-dev libhdf5-serial-dev libgflags-dev libgoogle-glog-dev liblmdb-dev protobuf-compiler libopencv-dev&lt;/font&gt;
+
+&lt;p&gt;&lt;strong&gt;7.安装cudnn&lt;/strong&gt;&lt;/p&gt;
+
+&lt;font size=&quot;3&quot;&gt;从官网上下载，然后解压&lt;/font&gt;
+
+&lt;pre&gt;&lt;code&gt;sudo cp cudnn.h /usr/local/include
+sudo cp libcudnn.* /usr/local/lib
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;font size=&quot;3&quot;&gt;复制过去之后，软连接就不见了，要自己再链接一次&lt;/font&gt;
+
+&lt;pre&gt;&lt;code&gt;sudo ln -sf libcudnn.so.7.0.64 libcudnn.so.7.0
+sudo ln -sf libcudnn.so.7.0 libcudnn.so
+sudo ldconfig 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;8.安装caffe&lt;/strong&gt;&lt;/p&gt;
+
+&lt;font size=&quot;3&quot;&gt;执行cp Makefile.config.example Makefile.config，修改部分内容&lt;/font&gt;
+
+&lt;pre&gt;&lt;code&gt;BLAS := mkl
+USE_CUDNN := 1前面注释去掉
+DEBUG := 1 //便于后面调试
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;font size=&quot;3&quot;&gt;编译&lt;/font&gt;
+
+&lt;pre&gt;&lt;code&gt;make all -j8
+make test -j8
+make runtest -j8
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;错误：&lt;/p&gt;
+
+&lt;p&gt;1./bin/bash: aclocal-1.14: command not found&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sudo apt-get install autotools-dev
+sudo apt-get install automake
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;2.src/demangle.h:80:27: error: expected initializer before ‘Demangle’.换成版本0.3.3就好了&lt;/p&gt;
+
+&lt;p&gt;3./sbin/ldconfig.real: /usr/local/lib/libcudnn.so.7.0 is not a symbolic link.重新建立软链接&lt;/p&gt;
+</description>
+        <pubDate>Mon, 26 Oct 2015 00:00:00 +0800</pubDate>
+        <link>chenrudan.github.io/blog/2015/10/26/installcaffe.html</link>
+        <guid isPermaLink="true">chenrudan.github.io/blog/2015/10/26/installcaffe.html</guid>
+        
+        <category>configure</category>
+        
+      </item>
+    
+      <item>
+        <title>[DeepLearning]深度学习之五常见tricks</title>
+        <description>&lt;p&gt;本文主要给出了在实现网络或者调节代码过程使用的以及平时看一些文章记录下来的一些小技巧，主要针对卷积网络和图像处理。就个人感受，有些技巧还是非常有效的，而且通常可以通过看开源库的一些文档或者源代码来发掘这些内容，最后能够称为自己所用。&lt;/p&gt;
+
+&lt;h4 id=&quot;validation-set&quot;&gt;1.构造validation set&lt;/h4&gt;
+
+&lt;p&gt;一般数据集可能不会给出验证集，所以自己会从给的训练集中按照一定比例（9：1）分离出验证集。&lt;/p&gt;
+
+&lt;h4 id=&quot;section&quot;&gt;2.增加训练数据&lt;/h4&gt;
+
+&lt;p&gt;为了更好的训练网络，有时候需要增加原始数据集，一般有以下方法[1]：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;沿着x轴将图片左右翻转&lt;/li&gt;
+  &lt;li&gt;随机的剪切、缩放、旋转&lt;/li&gt;
+  &lt;li&gt;用pca来改变RGB的强度值，产生分别对应的特征值和特征向量，然后用均值为0方差为0.1的随机数与特征值和特征向量相乘得到新的数据[2]&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;section-1&quot;&gt;3.预处理&lt;/h4&gt;
+
+&lt;p&gt;常见的是减均值、除方差，还有变化到-1～1，主要针对不同尺度的特征，例如房价预测的例子中，每个房子的房屋大小和卧室数量就不在一个数量级上，这种情况就需要对每一维特征进行尺度变换normalize，还有的方法是使用pca白化。但是就图像处理领域，通常就减去一个均值就可以直接拿来计算。&lt;/p&gt;
+
+&lt;h4 id=&quot;section-2&quot;&gt;4.权重初始化&lt;/h4&gt;
+
+&lt;p&gt;不要全部初始化为0，这样会导致大部分的deltaw都一样，一般用高斯分布或者uniform分布。但是这样的分布会导致输出的方差随着输入单元个数而变大，因此需要除以fan in（输入个数的平方根）。&lt;/p&gt;
+
+&lt;h4 id=&quot;tricks&quot;&gt;5.卷积tricks&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;图片输入是2的幂次方，例如32、64、96、224等。&lt;/li&gt;
+  &lt;li&gt;卷积核大小是3*3或者5*5。&lt;/li&gt;
+  &lt;li&gt;输入图片上下左右需要用0补充，即padding，且假如卷积核大小是5那么padding就是2（图片左右上下都补充2），卷积核大小是3padding大小就是1。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;poolingtricks&quot;&gt;5.pooling层tricks&lt;/h4&gt;
+
+&lt;p&gt;poolin层也能防止过拟合，使用overlapped pooling，即用来池化的数据有重叠，但是pooling的大小不要超过3。&lt;/p&gt;
+
+&lt;p&gt;max pooling比avg pooling效果会好一些。&lt;/p&gt;
+
+&lt;h4 id=&quot;overfitting&quot;&gt;6.避免overfitting&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;drop out能够避免过拟[1]，一般在加在全连接层后面[3]，但是会导致收敛速度变慢。&lt;/li&gt;
+  &lt;li&gt;正则化也能避免过拟合，L2正则l2正则惩罚了峰值权重，l1正则会导致稀疏权重，趋近于0，l1会趋向选择有用的输入。又或者可以给给权重矢量的模加上上边界（3 or 4），更新时对delta w进行归一化。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;section-3&quot;&gt;7.调参&lt;/h4&gt;
+
+&lt;p&gt;使用pretrain好的网络参数作为初始值。然后fine-tuning，此处可以保持前面层数的参数不变，只调节后面的参数。但是finetuning要考虑的是图片大小和跟原数据集的相关程度，如果相关性很高，那么只用取最后一层的输出，不相关数据多就要finetuning比较多的层。&lt;/p&gt;
+
+&lt;p&gt;初始值设置为0.1，然后训练到一定的阶段除以2，除以5，依次减小。&lt;/p&gt;
+
+&lt;p&gt;加入momentum项[2]，可以让网络更快的收敛。&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;节点数增加，learning rate要降低&lt;/li&gt;
+  &lt;li&gt;层数增加，后面的层数learning rate要降低&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;section-4&quot;&gt;9.激励函数&lt;/h4&gt;
+
+&lt;p&gt;Sigmoid作为激励函数有饱和和梯度消失的现象，在接近输出值0和1的地方梯度接近于0（可通过sigmoid的分布曲线观察出）。因而可采用Rectified Linear Units(ReLUs)作为激励函数，这样会训练的快一些，但是relu比较脆弱，如果某次某个点梯度下降的非常多，权重被改变的特别多，那么这个点的激励可能永远都是0了，还有带参的prelu、产生随机值的rrelu等改进版本。但是leaky版本（0换成0.01）的效果并不是很稳定。&lt;/p&gt;
+
+&lt;h4 id=&quot;section-5&quot;&gt;10.通过做图来观察网络训练的情况&lt;/h4&gt;
+
+&lt;p&gt;可以画出随着不同参数训练集测试集的改变情况，观察它们的走势图来分析到底什么时候的参数比较合适。&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;不同学习率与loss的曲线图，横坐标是epoch，纵坐标是loss或者正确率&lt;/li&gt;
+  &lt;li&gt;不同的batchsize与loss的曲线图，坐标同上&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;section-6&quot;&gt;11.数据集不均衡&lt;/h4&gt;
+
+&lt;p&gt;这种情况如果数据集跟imagenet的比较相近，可以直接用finetuning的方法，假如不相近，首先考虑重新构造数据集的每一类个数，再次可以减少数据量比较大的类（减采样），并且复制数据量比较小的类（增采样）。&lt;/p&gt;
+
+&lt;p&gt;以上是在实现卷积神经网络中使用过的和平时看文章中提及到的一些技巧，大多数现在的开源软件都是已经实现好了，直接调用使用即可。&lt;/p&gt;
+
+&lt;p&gt;参考：[1] &lt;a href=&quot;http://cs231n.stanford.edu/&quot;&gt;http://cs231n.stanford.edu/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;[2]&lt;a href=&quot;http://lamda.nju.edu.cn/weixs/project/CNNTricks/CNNTricks.html&quot;&gt;http://lamda.nju.edu.cn/weixs/project/CNNTricks/CNNTricks.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;[3] &lt;a href=&quot;http://www.cs.toronto.edu/~fritz/absps/imagenet.pdf&quot;&gt;http://www.cs.toronto.edu/~fritz/absps/imagenet.pdf&lt;/a&gt;&lt;/p&gt;
+</description>
+        <pubDate>Tue, 04 Aug 2015 00:00:00 +0800</pubDate>
+        <link>chenrudan.github.io/blog/2015/08/04/dl5tricks.html</link>
+        <guid isPermaLink="true">chenrudan.github.io/blog/2015/08/04/dl5tricks.html</guid>
+        
+        <category>project experience</category>
+        
+      </item>
+    
+      <item>
+        <title>【CUDA】cuda stream和event相关内容</title>
+        <description>&lt;p&gt;本文主要理解CUDA streams和相关的概念，有的概念翻译成中文反而无法体现它的意思，因此基本上还是用英文。主要参考了《The CUDA Handbook》这本书。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;contexts&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;首先介绍contexts，它类似于cpu中的进程，它作为一个容器，管理了所有对象的生命周期，大多数的CUDA函数调用需要context。这些对象如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;所有分配内存
+Modules，类似于动态链接库，以.cubin和.ptx结尾
+CUDA streams，管理执行单元的并发性
+CUDA events
+texture和surface引用
+kernel里面使用到的本地内存（设备内存）
+用于调试、分析和同步的内部资源
+用于分页复制的固定缓冲区
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;cuda runtime（软件层的库）不提供API直接接入CUDA context，而是通过&lt;strong&gt;&lt;em&gt;延迟初始化&lt;/em&gt;&lt;/strong&gt;（deferred initialization）来创建context，也就是lazy initialization。具体意思是在调用每一个CUDART库函数时，它会检查当前是否有context存在，假如需要context，那么才自动创建。也就是说需要创建上面这些对象的时候就会创建context。创建的这个context的特性跟程序之间给的要求有关，例如cudaSetDevice()（线程设置当前的context，这个函数并不需要context存在），cudaSetDeviceFlags()等。此处，可以显式的控制初始化，即调用cudaFree(0)，强制的初始化。cuda runtime将context和device的概念合并了，即在一个gpu上操作可看成在一个context下。因而cuda runtime提供的函数形式类似cudaDeviceSynchronize()而不是与driver API 对应的cuCtxSynchronize()。应用可以通过驱动API来访问当前context的栈。与context相关的操作，都是以cuCtxXXXX()的形式作为driver API实现。&lt;/p&gt;
+
+&lt;p&gt;当context被销毁，里面分配的资源也都被销毁，一个context内分配的资源其他的context不能使用。在driver API中，每一个cpu线程都有一个&lt;strong&gt;&lt;em&gt;current context&lt;/em&gt;&lt;/strong&gt;的栈，新建新的context就入栈。针对每一个线程只能有一个出栈变成可使用的current context，而这个游离的context可以转移到另一个cpu线程，通过函数cuCtxPushCurrent/cuCtxPopCurrent来实现。&lt;/p&gt;
+
+&lt;h4 id=&quot;cuda-streams&quot;&gt;1.CUDA streams&lt;/h4&gt;
+
+&lt;p&gt;CUDA streams用来管理执行单元的并发，在一个流中，操作是串行的按序执行的，但是在不同的流中操作就可以同时执行，从而完成并发操作。其中包括如下一些操作：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;管理GPU、CPU的并发
+当流处理器在执行kernel时可以调用内存复制引擎同时进行内存复制
+（不同？）核函数的并发
+多GPU的并发
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;并发的例子如下，摘自&lt;a href=&quot;http://on-demand.gputechconf.com/gtc-express/2011/presentations/StreamsAndConcurrencyWebinar.pdf&quot;&gt;http://on-demand.gputechconf.com/gtc-express/2011/presentations/StreamsAndConcurrencyWebinar.pdf&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;代码1下面的操作就是同步的，没有异步的过程&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;cudaMalloc ( &amp;amp;dev1, size ) ;
+double* host1 = (double*) malloc ( &amp;amp;host1, size ) ;
+…
+cudaMemcpy ( dev1, host1, size, H2D ) ;
+kernel2 &amp;lt;&amp;lt;&amp;lt; grid, block, 0 &amp;gt;&amp;gt;&amp;gt; ( …, dev2, … ) ;
+kernel3 &amp;lt;&amp;lt;&amp;lt; grid, block, 0 &amp;gt;&amp;gt;&amp;gt; ( …, dev3, … ) ;
+cudaMemcpy ( host4, dev4, size, D2H ) ;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;而代码2的操作是异步的，全并发的，在不同的四个流中完成不同的操作。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;cudaStream_t stream1, stream2, stream3, stream4 ;
+cudaStreamCreate ( &amp;amp;stream1) ;
+...
+cudaMalloc ( &amp;amp;dev1, size ) ;
+cudaMallocHost ( &amp;amp;host1, size ) ; 
+…
+cudaMemcpyAsync ( dev1, host1, size, H2D, stream1 ) ;
+kernel2 &amp;lt;&amp;lt;&amp;lt; grid, block, 0, stream2 &amp;gt;&amp;gt;&amp;gt; ( …, dev2, … ) ;
+kernel3 &amp;lt;&amp;lt;&amp;lt; grid, block, 0, stream3 &amp;gt;&amp;gt;&amp;gt; ( …, dev3, … ) ;
+cudaMemcpyAsync ( host4, dev4, size, D2H, stream4 ) ;
+...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;同步异步的过程可以参考下图，其中的数字就代表了流编号。在第一张示例中，在一个stream 0上三个操作按序执行，第二张图中，第二个时间段，stream 1的kernel执行操作就和stream 2的内存复制操作时间重叠（overlap）了，从而做到了并发。&lt;/p&gt;
+
+&lt;p&gt;摘自&lt;a href=&quot;http://devblogs.nvidia.com/parallelforall/how-overlap-data-transfers-cuda-cc/&quot;&gt;http://devblogs.nvidia.com/parallelforall/how-overlap-data-transfers-cuda-cc/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://7xkmdr.com1.z0.glb.clouddn.com/cuda-stream.png&quot; alt=&quot;1&quot; height=&quot;60%&quot; width=&quot;60%&quot; hspace=&quot;200&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;GPU上的一些操作是异步进行的，异步的意思就是gpu在它执行完任务之前就将控制全返回给主机线程，那么就能保证后面的cpu程序在执行的时候gpu的函数也在执行。也就是说在GPU上执行的一些操作和CPU上执行的函数能够异步进行。这些操作大致如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;启动核函数
+在同一个设备上的内存复制
+小于64KB内存从主机复制到设备
+后缀带有Async的复制函数
+调用内存设置函数（设置共享内存、L1缓存大小等）
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;在cuda7版本之前，没有显式指定流，空流（默认流）会被隐式指定，它要同步设备上的所有操作。一个设备会产生一个空流。其它流的工作完成之后空流的工作才能开始，空流工作完成后其它流才能开始。cuda7版本增加了新的特性，可以选择每一个主机线程使用独立的空流，即一个线程一个空流，避免了原来空流的按序执行。&lt;a href=&quot;http://devblogs.nvidia.com/parallelforall/gpu-pro-tip-cuda-7-streams-simplify-concurrency/&quot;&gt;http://devblogs.nvidia.com/parallelforall/gpu-pro-tip-cuda-7-streams-simplify-concurrency/&lt;/a&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;//启动每个线程一个空流的方法
+//方法1
+nvcc --default-stream per-thread
+//方法2，在include CUDA头文件之前
+#define CUDA_API_PER_THREAD_DEFAULT_STREAM
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&quot;cuda-events&quot;&gt;2.CUDA events&lt;/h4&gt;
+
+&lt;p&gt;CUDA events可以用来控制同步，包括cpu/gpu的同步、gpu上不同engine的同步和gpu之间的同步。此外可以用来检查gpu的操作时长。它能够向CUDA stream进行记录（record），cpu会等待event记录的这个地方完成才能执行下一步。&lt;/p&gt;
+
+&lt;p&gt;例如用来计算程序运行时间的例子，省略掉了初始化的过程。cudaEventRecord的第二个参数是cudaStream_t stream = 0 。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;cudaEventRecord(start, 0);
+for (int i = 0; i &amp;lt; 2; ++i) {
+    cudaMemcpyAsync(inputDev + i * size, inputHost + i * size,
+                 size, cudaMemcpyHostToDevice, stream[i]);
+    MyKernel&amp;lt;&amp;lt;&amp;lt;100, 512, 0, stream[i]&amp;gt;&amp;gt;&amp;gt;
+                  (outputDev + i * size, inputDev + i * size, size);
+    cudaMemcpyAsync(outputHost + i * size, outputDev + i * size,
+                 size, cudaMemcpyDeviceToHost, stream[i]);
+}
+cudaEventRecord(stop, 0);
+cudaEventSynchronize(stop);
+float elapsedTime;
+cudaEventElapsedTime(&amp;amp;elapsedTime, start, stop);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;不同的同步函数原型&lt;/th&gt;
+      &lt;th&gt;函数意义&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;__host__ ​cudaError_t cudaEventSynchronize(cudaEvent_t event)&lt;/td&gt;
+      &lt;td&gt;等待event完成，才执行下一段&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;CUresult cuEventSynchronize(CUevent hEvent)&lt;/td&gt;
+      &lt;td&gt;等待event完成，才执行下一段&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;__host__ ​ __device__ ​cudaError_t cudaDeviceSynchronize(void)&lt;/td&gt;
+      &lt;td&gt;等待device上所有操作完成&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;CUresult cuCtxSynchronize(void)&lt;/td&gt;
+      &lt;td&gt;等待context中所有操作完成，driver API对应cudaDeviceSynchronize()&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;__host__ ​cudaError_t cudaThreadSynchronize(void)&lt;/td&gt;
+      &lt;td&gt;是cudaDeviceSynchronize的一个弃用版本，意义一样但是现在不用这个了&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;__host__ ​cudaError_t cudaStreamSynchronize(cudaStream_t stream)&lt;/td&gt;
+      &lt;td&gt;等待传入的流中的操作完成&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;CUresult cuStreamSynchronize(CUstream hStream)&lt;/td&gt;
+      &lt;td&gt;等待传入的流中的操作完成&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+</description>
+        <pubDate>Wed, 22 Jul 2015 00:00:00 +0800</pubDate>
+        <link>chenrudan.github.io/blog/2015/07/22/cudastream.html</link>
+        <guid isPermaLink="true">chenrudan.github.io/blog/2015/07/22/cudastream.html</guid>
+        
+        <category>programming languages</category>
+        
+      </item>
+    
+      <item>
+        <title>[caffe]的项目架构和源码解析</title>
+        <description>&lt;p&gt;Caffe是一个基于c++/cuda语言的深度学习框架，开发者能够利用它自由的组成自己想要的网络。目前支持卷积神经网络和全连接神经网络（人工神经网络）。Linux上，c++可以通过命令行来操作接口，matlab、python有专门的接口，运算支持gpu也支持cpu，目前版本能够支持多gpu，但是分布式多机版本仍在开发中。大量的研究者都在采用caffe的架构，并且也得到了很多有效的成果。2013年9月-12月，贾扬清在伯克利大学准备毕业论文的时候开发了caffe最初的版本，后期有其他的牛人加入之后，近两年的不断优化，到现在成了最受欢迎的深度学习框架。近期，caffe2也开源了，但是仍旧在开发。本文主要主要基于源代码的层面来对caffe进行解读，并且给出了几个自己在测试的过程中感兴趣的东西。&lt;/p&gt;
+
+&lt;h4 id=&quot;section&quot;&gt;1.如何调试&lt;/h4&gt;
+
+&lt;p&gt;为了能够调试，首先要在makefile的配置文件中将DEBUG选项设置为1，这步谨慎选择，debug版本会在打印输出的时候输出大量的每个阶段耗时，也可直接从整个项目的caffe.cpp入手来查看源文件。编译好可调试的版本之后，执行下面的指令可以启动调试。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;gdb --args ./build/tools/caffe train –solver=examples/cifar10/cifar10_full_solver.prototxt
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;调试过程中需要注意的一个问题是，源码中使用了函数指针，执行下一步很容易就跳过了，所以要在合适的时机使用s来进入函数。&lt;/p&gt;
+
+&lt;h4 id=&quot;section-1&quot;&gt;2.第三方库&lt;/h4&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;center&gt;gflags&lt;/center&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;gflags是Google出的一个能够简化命令行参数处理的工具，在c++代码中定义实际意义，在命令行中将参数传进去。例如下面的例子中，c++的代码中声明这样的内容，DEFINE_string是一个string类型，括号内的solver就是一个flag，这个flag从命令行中读取的参数就会解析成string，存在FLAGS_solver中，使用时当成正常的string使用即可。在命令行调用时（参见调试部分举出的例子），用-solver=xxxxx，将实际的值给传递进去。这里的string可以替换成int32/int64/bool等。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;em&gt;&lt;font size=&quot;2&quot;&gt;DEFINE_string(solver, &quot;&quot;,  &quot;The solver definition protocol buffer text file.&quot;);&lt;/font&gt;&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;需要注意的时，这个定义过程只能在一个文件中定义一次，其他文件要是想用的话可以有两种选择，一种是直接在需要的文件中declare，一种方式在一个头文件中declare，其他文件要用就直接include。声明方式如下:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;em&gt;&lt;font size=&quot;2&quot;&gt;DECLARE_bool(solver);&lt;/font&gt;&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;假如需要设置bool变量为false，一个简便的方法是在变量前面加上no，即变成-nosolver。此外，–会导致解析停止，例如下面的式子中，f1是flag，它的值为1，但是f2并不是2。&lt;/p&gt;
+
+&lt;font size=&quot;2&quot;&gt;foo -f1 1 -- -f2 2&lt;/font&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;center&gt;Protobuf&lt;/center&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Google Protocol Buffer(简称Protobuf)是Google公司内部的混合语言数据标准，目前已经正在使用的有超过48,162种报文格式定义和超过12,183个.proto文件。它是一种轻便高效的结构化数据存储格式，可以用于结构化数据串行化、序列化结构数据，自己定义一次数据如何结构化，目前提供了c++、java、python三种语言的API。相对于xml优点在于简单、体积小、读取处理时间快、更少产生歧义、更容易产生易于编程的类。&lt;/p&gt;
+
+&lt;p&gt;就caffe而言，这个工具的用处体现在生成caffe所需的&lt;strong&gt;参数类&lt;/strong&gt;，这些类能从以.prototxt结尾的文件中解析参数，然后对应生成Net、Layer的参数。自己定义序列化文件a.proto，文件内容如图1，以关键词message来定义一个类，本图中它是卷积层的参数类，这个类的成员类型有bool和uint32等，也可用自己定义的类型。等号后面的数字是一个唯一的编号tag，来区分这些不同参数，在官方文档中这些称为field。可以在一个.proto中定义多个message，注释风格与c/c++一致。定义好的proto进行编译后生成.h和.cc对应c++的头文件和源文件。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://7xkmdr.com1.z0.glb.clouddn.com/caffe7.png&quot; alt=&quot;1&quot; height=&quot;60%&quot; width=&quot;60%&quot; hspace=&quot;200&quot; /&gt;&lt;/p&gt;
+
+&lt;font size=&quot;2&quot;&gt;&lt;center&gt;图1 自定义proto&lt;/center&gt;&lt;/font&gt;
+
+&lt;p&gt;图2是编译后自动生成的文件，可以看到生成了ConvolutionalParameter类。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://7xkmdr.com1.z0.glb.clouddn.com/caffe8.png&quot; alt=&quot;1&quot; height=&quot;60%&quot; width=&quot;60%&quot; hspace=&quot;200&quot; /&gt;&lt;/p&gt;
+
+&lt;font size=&quot;2&quot;&gt;&lt;center&gt;图2 自动生成的c++类&lt;/center&gt;&lt;/font&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;center&gt;Glob&lt;/center&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;这个工具也是谷歌出品，用来打印初始化、运行时的信息，记录意外中断等。使用先要初始化google的logging库。一般在caffe中常见的LOG(INFO)…和CHECK(XXX)…都是它执行的。相关的内容可以参考下面的图片，图3是标出颜色的是代码中用到了的打印，图4是对应打印到屏幕上的信息。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://7xkmdr.com1.z0.glb.clouddn.com/caffe9.png&quot; alt=&quot;1&quot; height=&quot;60%&quot; width=&quot;60%&quot; hspace=&quot;200&quot; /&gt;&lt;/p&gt;
+
+&lt;font size=&quot;2&quot;&gt;&lt;center&gt;图3 c++代码&lt;/center&gt;&lt;/font&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://7xkmdr.com1.z0.glb.clouddn.com/caffe10.png&quot; alt=&quot;1&quot; height=&quot;60%&quot; width=&quot;60%&quot; hspace=&quot;200&quot; /&gt;&lt;/p&gt;
+
+&lt;font size=&quot;2&quot;&gt;&lt;center&gt;图4 打印信息&lt;/center&gt;&lt;/font&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;center&gt;LMDB&lt;/center&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;lmdb是一个读取速度快、轻量级的数据库，支持多线程、多进程并发，数据由key-value对存储。caffe还提供leveldb的接口，本文只讨论python实现的lmdb。在这个数据库中存放的是序列化生成的字符串。caffe提供脚本文件先生成lmdb格式的数据，这个脚本文件会生成一个文件夹，文件夹下包括两个文件，一个数据文件，一个lock文件。然后调用训练网络的DataLayer层来读取lmdb格式的数据。图5是定义ldmb数据库类型，图6是将数据序列化再存入数据库中。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://7xkmdr.com1.z0.glb.clouddn.com/caffe11.png&quot; alt=&quot;1&quot; height=&quot;40%&quot; width=&quot;40%&quot; hspace=&quot;320&quot; /&gt;&lt;/p&gt;
+
+&lt;font size=&quot;2&quot;&gt;&lt;center&gt;图5 定义db&lt;/center&gt;&lt;/font&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://7xkmdr.com1.z0.glb.clouddn.com/caffe12.png&quot; alt=&quot;1&quot; height=&quot;30%&quot; width=&quot;30%&quot; hspace=&quot;380&quot; /&gt;&lt;/p&gt;
+
+&lt;font size=&quot;2&quot;&gt;&lt;center&gt;图6 存入db&lt;/center&gt;&lt;/font&gt;
+
+&lt;h4 id=&quot;caffe&quot;&gt;3.caffe基本结构&lt;/h4&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;center&gt;Blob&lt;/center&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;这是caffe的数据存储类blob，它实现了关于一个变量的所有相关信息和相关操作。存储数据的方式可以看成是一个N维的c数组，存储空间连续。例如存储图片是4维(num, channel, height, width),变量(n,k,h,w)在数组中存储位置为((n&lt;em&gt;K+k)&lt;/em&gt;H+h)*W+w。相应的四维参数保存为(out_channel, in_channel, filter_size, filter_size)。blob有以下三个特征：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;两块数据，一个是原始data，一个是求导值diff&lt;/li&gt;
+  &lt;li&gt;两种内存分配方式，一种是分配在cpu上，一种是分配在gpu上，通过前缀cpu、gpu来区分&lt;/li&gt;
+  &lt;li&gt;两种访问方式，一种是不能改变数据，一种能改变数据&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;其中让人眼前一亮的是data和diff的设计，其实在卷积网络中，很多情况下一个变量不仅有它自身的值，另外还有cost function对它的导数，采用过多的变量来保存这两个信息还不如将它们放在一起直观，下图是源码blob.hpp中的定义。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://7xkmdr.com1.z0.glb.clouddn.com/caffe1.png&quot; alt=&quot;1&quot; height=&quot;40%&quot; width=&quot;40%&quot; hspace=&quot;320&quot; /&gt;&lt;/p&gt;
+
+&lt;font size=&quot;2&quot;&gt;&lt;center&gt;图7 定义blob&lt;/center&gt;&lt;/font&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;center&gt;Layer&lt;/center&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;caffe根据不同的功能将它们包装成不同的Layer，例如卷积、pooling、非线性变换、数据层等等。具体有多少种layer及其内容参考官方文档即可，本文主要讨论它的实现，它的实现分为三个部分，也可参考演示图8：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;setup，初始化每一层，和它对应的连接关系&lt;/li&gt;
+  &lt;li&gt;forward，由bottom求top&lt;/li&gt;
+  &lt;li&gt;backward，由top的梯度求bottom的梯度，有参数的求参数梯度&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://7xkmdr.com1.z0.glb.clouddn.com/caffe6.png&quot; alt=&quot;1&quot; height=&quot;60%&quot; width=&quot;60%&quot; hspace=&quot;200&quot; /&gt;&lt;/p&gt;
+
+&lt;font size=&quot;2&quot;&gt;&lt;center&gt;图8 caffe的layer实现方式&lt;/center&gt;&lt;/font&gt;
+
+&lt;p&gt;而前向传播、后向传播的函数也分别有两种实现方式，一种基于gpu一种基于cpu。Forward函数，参数分别是两个存放blob指针的vector，分别是bottom、top。通过指针数组的方式能够实现多个输入多个输出。值得一提的是，caffe的卷积部分采用了将数据进行变换，变成矩阵之后再用矩阵乘法来实现卷积，cudnn也是采用这样的方式，经过我的实验，确实这种方式比直接实现cuda kernel要快一些。caffe大部分底层实现都是用blas或者cublas处理的。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;center&gt;Net&lt;/center&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Net它将不同的层正确的连接起来，是层和它们之间连接的集合。通过Net::Init()来初始化模型，构造blobs和layers，调用layers的setup函数。Net的Forward函数内部调用了ForwardPrefilled，并且调用了ForwardFromTo，它从给定的层数id（start）到end来调用Layer对象的Forward函数。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;center&gt;Solver&lt;/center&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Solver是控制网络的关键所在，它的具体功能包括解析传递的prototxt、执行train、调用网络前向传播计算输出和loss、后向传播计算梯度、根据不同优化方式更新参数（可能不止有learning rate这种参数，而是由alpha、beta构成的更新方式）等。在解析.prototxt时，首先初始化NetParameter对象，用于放置全部的网络参数， 然后在初始化训练网络的时候，通过net变量给出的proto文件地址，来解析并获取网络的层次结构参数。其中的函数solve会根据命令行传递进来的参数来解析并恢复之前保存好的网络文件和权重等，恢复上次执行的iteration次数、loss等。当网络参数配置好，需要恢复的文件处理完成就调用net.cpp的Forward函数开始执行网络。Forward会返回这一次迭代的loss，然后打印出来。接下来会调用ApplyUpdata函数，它会根据不同的策略来改变当前权重的学习率大小，再更新权重。此外，solver还提供保存快照的功能。&lt;/p&gt;
+
+&lt;h4 id=&quot;section-2&quot;&gt;4.运行实例&lt;/h4&gt;
+
+&lt;p&gt;假如是自己的图片数据，可以按照如下的方法来进行分类。我全部采用的c++，改源代码比较方便。&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;将图片整理成train和test两个文件夹，并将图片的名称和label保存到一个txt中&lt;/li&gt;
+  &lt;li&gt;将数据变成lmdb格式，采用的是convert_imagenet这个工具&lt;/li&gt;
+  &lt;li&gt;生成均值处理后的图片，采用compute_image_mean这个工具&lt;/li&gt;
+  &lt;li&gt;修改模型并执行train&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;此外，我还测试过一维数据，并且修改了convert_imagenet.cpp源码，将数据读入lmdb，大致代码如下:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;datum.set_channels(num_channels);
+datum.set_height(num_height);
+datum.set_width(num_width);
+datum.clear_data();
+datum.set_encoded(false);
+datum.set_data(lines[line_id].first);
+datum.set_label(lines[line_id].second);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;通过改这个代码，可以将一维数据读入网络，进行处理。此外，在执行这个一维数据的过程中，也出了一个错，报错信息”Too big key/data, key is empty, or wrong DUPFIXED size”，这个问题是因为lmdb是保存的key-value对，而lmdb对key的长度进行了限制，长度不能超过512，但是我在传递的时候key的值给多了，因此得到了解决。&lt;/p&gt;
+
+&lt;h4 id=&quot;section-3&quot;&gt;5.小结&lt;/h4&gt;
+
+&lt;p&gt;通过阅读源码可以看到，caffe作为一个架构，层次、思路、需要解决的问题都非常清晰，它的高效体现在很多方面，不仅采用了读取快速的lmdb，而且计算部分基本上都是用很高效的blas库完成的。而它的数据、层次、网络的构成和执行是分开控制的，这点就提供了比较大的灵活性，唯一的遗憾就是安装比较繁琐，总是会出现某个依赖包没装好的情况。总的来说，caffe在科研领域使用的非常广泛，大量的研究都是基于caffe预训练好的imagenet的网络而得到了很好的进展，作者这种分享的精神值得肯定。&lt;/p&gt;
+
+</description>
+        <pubDate>Thu, 07 May 2015 00:00:00 +0800</pubDate>
+        <link>chenrudan.github.io/blog/2015/05/07/cafferead.html</link>
+        <guid isPermaLink="true">chenrudan.github.io/blog/2015/05/07/cafferead.html</guid>
+        
+        <category>project experience</category>
+        
+      </item>
+    
+      <item>
+        <title>【Cuda】入门和gpu相关知识</title>
+        <description>&lt;h5 id=&quot;gpu&quot;&gt;1.关于GPU&lt;/h5&gt;
+
+&lt;p&gt;GPU是图形处理单元(Graphic Processing Unit)的简称，用多个GPU处理器来并行计算&lt;/p&gt;
+
+&lt;h5 id=&quot;cuda&quot;&gt;2.Cuda&lt;/h5&gt;
+
+&lt;p&gt;cuda采用的是C/C++编译器为前端，以C/C++语法为基础设计，有片内共享存储器，CUDA软件栈包含两个层次，一个是驱动层的API,这类函数以cu开关，一个是运行层的API，以cuda开头，运行层API是建立在驱动层API之上的，是对驱动层API的封装，我们的开发都是优先使用运行时API，就说尽量用cuda开头的函数&lt;/p&gt;
+
+&lt;h5 id=&quot;cuda-1&quot;&gt;3.Cuda语法&lt;/h5&gt;
+
+&lt;p&gt;&lt;strong&gt;函数类型限定符&lt;/strong&gt;，用来确定函数是在CPU还是在GPU上执行，以及这个函数是从CPU调用还是从GPU调用。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;__device__，__device__表示从GPU上调用，在GPU上执行；
+__global__，__global__表示在CPU上调用，在GPU上执行，也就是所谓的内核(kernel)函数；内核主要用来执行多线程调用。
+__host__，__host__表明在CPU上调用，在CPU上执行，这是默认时的情况，也就是传统的C函数。CUDA支持__host__和__device__的联用，表示同时为主机和设备编译。此时这个函数不能出现多线程语句
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;变量类型限定符&lt;/strong&gt;，用来规定变量存储什么位置上。在传统的CPU程序上，这个任务由编译器承担。在CUDA中，不仅要使用主机端的内存，还要使用设备端的显存和GPU片上的寄存器、共享存储器和缓存。在CUDA存储器模型中，一共抽象出来了8种不同的存储器。复杂的存储器模型使得必须要使用限定符要说明变量的存储位置。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;__device__，__device__表明声明的数据存放在显存中，所有的线程都可以访问，而且主机也可以通过运行时库访问；
+__shared__，__shared__表示数据存放在共享存储器在，只有在所在的块内的线程可以访问，其它块内的线程不能访问；
+__constant__，__constant__表明数据存放在常量存储器中，可以被所有的线程访问，也可以被主机通过运行时库访问；
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;如果在GPU上执行的函数内部的变量没有限定符，那表示它存放在寄存器或者本地存储器中，在寄存器中的数据只归线程所有，其它线程不可见。如果SM的寄存器用完，那么编译器就会将本应放到寄存器中的变量放到本地存储器中。&lt;/p&gt;
+
+&lt;p&gt;执行配置运算符«&amp;lt; »&amp;gt;，用来传递内核函数的执行参数。执行配置有四个参数，第一个参数声明网格的大小，第二个参数声明块的大小，第三个参数声明动态分配的共享存储器大小，默认为0，最后一个参数声明执行的流，默认为0。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;内建变量&lt;/strong&gt;，用于在运行时获得网格和块的尺寸及线程索引等信息&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;gridDim, gridDim是一个包含三个元素x,y,z的结构体，分别表示网格在x,y,z三个方向上的尺寸，虽然其有三维，但是目前只能使用二维；
+blockDim, blockDim也是一个包含三个元素x,y,z的结构体，分别表示块在x,y,z三个方向上的尺寸，对应于执行配置中的第一个参数，对应于执行配置的第二个参数；
+blockIdx, blockIdx也是一个包含三个元素x,y,z的结构体，分别表示当前线程所在块在网格中x,y,z三个方向上的索引；
+threadIdx, threadIdx也是一个包含三个元素x,y,z的结构体，分别表示当前线程在其所在块中x,y,z三个方向上的索引；
+warpSize，warpSize表明warp的尺寸，在计算能力为1.0的设备中，这个值是24，在1.0以上的设备中，这个值是32。
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;其中__syncthreads()是CUDA的内置命令，其作用是保证block内的所有线程都已经运行到调用__syncthreads()的位置&lt;/p&gt;
+
+&lt;p&gt;CUDA程序的基本模式：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;分配内存空间和显存空间
+初始化内存空间
+将要计算的数据从内存上复制到显存上
+执行kernel计算
+将计算后显存上的数据复制到内存上
+处理复制到内存上的数据
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h5 id=&quot;cuda-2&quot;&gt;4.CUDA编程模型&lt;/h5&gt;
+
+&lt;p&gt;它支持大量的线程级并行计算，CUDA编程模型将CPU作为主机（Host），而将GPU做为协处理器（Coprocessor），或者设备（Device），以CPU来控制程序整体的串行逻辑和任务调度，而让GPU来运行一些能够被高度线程化的数据并行部分。即让GPU与CPU协同工作，更确切的说是CPU控制GPU工作。GPU只有在计算高度数据并行任务时才发挥作用。一般而言，ＣＵＤＡ并行程序包括串行计算部分和并行计算部分，并行计算部分称之为内核（Kernel），内核只是一个在ＧＰＵ上执行的数据并行代码段。理想情况下，串行代码的作用应该只是清理上个内核函数，并启动下一个内核函数。&lt;/p&gt;
+
+&lt;h5 id=&quot;cuda-3&quot;&gt;5.CUDA线程层次&lt;/h5&gt;
+
+&lt;p&gt;CUDA的关键特性：线程按照粗粒度的线程块和细粒度的线程两个层次进行组织、在细粒度并行的层次通过共享存储器和栅栏同步实现通信，这就是CUDA的双层线程模型。对于程序员来说，他们需要将任务划分为互不相干的粗粒度子问题(最好是易并行计算)，再将每个子问题划分为能够使用线程处理的问题。内核函数实质上是以块为单位执行的。&lt;/p&gt;
+
+&lt;h5 id=&quot;section&quot;&gt;6.存储器组织&lt;/h5&gt;
+
+&lt;p&gt;CUDA的存储器由一系列不同的地址空间组成。其中，shared memory和register位于GPU片内，Texture memory和Constant memory可以由GPU片内缓存加速对片外显存的访问，而Local memory和Device memory位于GPU片外的显存中&lt;/p&gt;
+
+&lt;p&gt;在kernel中不允许有C++的类、继承以及在基本块中定义变量等语法&lt;/p&gt;
+
+&lt;p&gt;fprintf 用于文件操作，&lt;/p&gt;
+
+&lt;p&gt;纹理存储器（texture memory）是一种只读存储器，由GPU用于纹理渲染的的图形专用单元发展而来，因此也提供了一些特殊功能。纹理存储器中的数据位于显存，但可以通过纹理缓存加速读取。在纹理存储器中可以绑定的数据比在常量存储器可以声明的64K大很多，并且支持一维、二维或者三维纹理。在通用计算中，纹理存储器十分适合用于实现图像处理或查找表，并且对数据量较大时的随机数据访问或者非对齐访问也有良好的加速效果。&lt;/p&gt;
+
+&lt;p&gt;参考：&lt;a href=&quot;http://blog.csdn.net/maosong00/article/details/16828399&quot;&gt;http://blog.csdn.net/maosong00/article/details/16828399&lt;/a&gt;&lt;/p&gt;
+</description>
+        <pubDate>Tue, 22 Jul 2014 00:00:00 +0800</pubDate>
+        <link>chenrudan.github.io/blog/2014/07/22/cudastart.html</link>
+        <guid isPermaLink="true">chenrudan.github.io/blog/2014/07/22/cudastart.html</guid>
+        
+        <category>programming languages</category>
+        
+      </item>
+    
+      <item>
+        <title>[DeepLearning]深度学习之一基础概念</title>
+        <description>&lt;p&gt;机器学习 = 表示+评估+优化&lt;/p&gt;
+
+&lt;p&gt;表示是指由输入如何得到输出，评估是指估计输出或者输入的分布，优化是用来逼近分布。&lt;/p&gt;
+
+&lt;p&gt;机器学习是为了拟合真实分布，从而得到未知分布。针对解决两类问题，一种是分类问题classification，给了输入，输出独立且得到确定分类。另一种是回归问题regression，针对给的输入，通过训练出来的模型能够预测出输出值，这个输出值是连续分布的。&lt;/p&gt;
+
+&lt;h4 id=&quot;section&quot;&gt;1.学习分类&lt;/h4&gt;
+
+&lt;p&gt;【监督学习】：训练有label（输出已知）的例子，例如手写体识别，目的是根据已知的映射关系去推断未知，能够很快的给出新的点label，计算量小。&lt;/p&gt;
+
+&lt;p&gt;【无监督学习】：训练无label的例子，不产生输入到输出的映射，但是也有目标函数，也是对目标函数进行优化。&lt;/p&gt;
+
+&lt;p&gt;【半监督学习】：以上两者结合&lt;/p&gt;
+
+&lt;p&gt;【transduction】：观察到的特定的训练集来预测特定的固定的测试集，关键在于推理，不是归纳模型，通过一些测试集相互矛盾的推测得到推论（TSVM），用来求近似值较好，而且test集可以是任意分布，而半监督则是与训练集相关。好处是需要较少的labeled点来预测分类，并且能够考虑到所有的点，自己标记那些unlabeled点通过他们属于哪个集群。缺点是不会建立预测模型，假如有新的点插入那么就需要重新把所有点都遍历一遍，数据大的时候计算损耗大。&lt;/p&gt;
+
+&lt;p&gt;【强化学习】：与行为主义心理学有关，环境是马尔可夫决策过程(MDP)，与动态编程技术有关，不需要知道具体的MDP因为需要解决非常大的MDP。区别是没有正确的输入输出对，也不会纠正求出错误的label的行为，关注点在持续的性能表现，在未被探索和已开发的领域找到一个平衡点。例如赌博机中，要得到最大的输出值，而不介意每次的组合是什么，赌徒要尽快找到获得最大奖励的手臂。就是有很多种组合，只找最优组合&lt;/p&gt;
+
+&lt;p&gt;【多任务学习（mtl）】：并行学习多个相关的problems（？），多个label？例如邮件过滤，个体垃圾邮件不同，但是肯定有相同的，例如可以使全部的权重值变小一点。用来预测没有给定输入的输出，通过之前的训练经验，训练出一个确定的输出（例子），就算在训练集中没有得出，但是也能推测出。inductive bias对目标概念作一些假设（前提）。&lt;/p&gt;
+
+&lt;h4 id=&quot;section-1&quot;&gt;2.概念&lt;/h4&gt;
+
+&lt;p&gt;【泛化（generalization）】就是将测试集和训练集分开，过拟合（overfitting）得到的分布接近训练集，但是不逼近测试集，这个时候，目标函数会顾及每一个点，导致形成的拟合函数波动很大，每个地方的导数很大，这样虽然把所有点都包括进去，但是函数变化很复杂，只有系数足够打，才能保证导数值大。交叉验证可以帮助避免过拟合（就是用验证集validation）。一般的避免方式是加入正则项（regularization term），正则化项一般是模型复杂度的单调递增函数，模型越复杂，正则化值越大。&lt;/p&gt;
+
+&lt;p&gt;【奥卡姆剃刀原理】：这个原理称为“如无必要，勿增实体”，就是越简单越好&lt;/p&gt;
+
+&lt;p&gt;【归纳偏置】：搜索路径则是机器学习算法的核心问题，找到最优的路径，用梯度下降的方法，搜索范围则定义为归纳偏置，有了它，当随着权重一步步更改的时候，它也在一步步逼近平衡点&lt;/p&gt;
+
+&lt;p&gt;【特征】：其实特征是一点一点构成的，小的特征组合形成大的特征，上一层看下一层是pixel级别的，下一层称为上一层的basis，每一层都是输入的另一种表示，不能出现信息的损失。&lt;/p&gt;
+
+&lt;p&gt;参考：&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://mlg.eng.cam.ac.uk/zoubin/nipstut.pdf&quot;&gt;http://mlg.eng.cam.ac.uk/zoubin/nipstut.pdf&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.valleytalk.org/wp-content/uploads/2012/11/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E9%82%A3%E4%BA%9B%E4%BA%8B.pdf&quot;&gt;http://www.valleytalk.org/wp-content/uploads/2012/11/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0%E9%82%A3%E4%BA%9B%E4%BA%8B.pdf&lt;/a&gt;&lt;/p&gt;
+
+</description>
+        <pubDate>Thu, 26 Jun 2014 00:00:00 +0800</pubDate>
+        <link>chenrudan.github.io/blog/2014/06/26/dl1baseconcept.html</link>
+        <guid isPermaLink="true">chenrudan.github.io/blog/2014/06/26/dl1baseconcept.html</guid>
+        
+        <category>project experience</category>
+        
+      </item>
+    
+  </channel>
+</rss>

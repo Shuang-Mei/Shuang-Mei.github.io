@@ -1,0 +1,204 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta name="description" content="听见下雨的声音">
+  <meta name="author" content="陈汝丹">
+  <meta name="keywords" content="【Cuda】入门和gpu相关知识, 陈汝丹, 陈汝丹">
+  <title>【Cuda】入门和gpu相关知识 - 陈汝丹</title>
+  <link rel="canonical" href="chenrudan.github.io/blog/2014/07/22/cudastart.html">
+  <link rel="icon" href="/res/img/favicon.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="/res/img/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="/res/css/public.css">
+  <link rel="stylesheet" href="/res/css/light.css">
+  <script src="/res/js/light.js"></script>
+  <script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+</head>
+<body>
+  <div id="blog">
+    <div class="sidebar">
+  <div class="profilepic">
+    <a href="/"><img src="http://7xkmdr.com1.z0.glb.clouddn.com/90fba609961616fae2b927.jpg" alt="logo"></img></a>
+  </div>
+  <h1 class="title"><a href="/">陈汝丹</a></h1>
+  <h2 class="sub-title">个人博客</h2>
+  <nav id="nav">
+    <ul>
+    
+      <li><a href="/page/timing.html"><i class="fa fa-clock-o"></i>&nbsp;时间轴</a></li>
+    
+      <li><a href="/page/category.html"><i class="fa fa-tags"></i>&nbsp;分类</a></li>
+    
+      <li><a href="/page/about.html"><i class="fa fa-paper-plane-o"></i>&nbsp;关于</a></li>
+    
+    </ul>
+  </nav>  
+  <nav id="sub-nav">
+    <a class="weibo " href="http://weibo.com/u/3842815916" title="新浪微博" target="_blank"><i class="fa fa-weibo"></i></a>
+    <a class="github" href="https://github.com/chenrudan" title="GitHub" target="_blank"><i class="fa fa-github fa-2x"></i></a>
+    <a class="rss" href="/page/feed.xml" title="RSS订阅" target="_blank"><i class="fa fa-rss"></i></a>
+  </nav>
+  <div id="license">
+    <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/cn/" target="_blank" title="本站所有作品采用：&#10;知识共享《署名 非商业性使用 相同方式共享 3.0》&#10;进行许可" >
+    <img alt="License" height="31" width="88" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFgAAAAfCAYAAABjyArgAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAK8AAACvABQqw0mAAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNAay06AAAAqVSURBVGiB7VptbFPXGX7utYlGJzz/2yYHYYQ2xZFWHAq0dLSx161TS9NcL4FCQ4fNtLYr65KUELaRLwOBxoQ6Hv3QpjX22lWtVirM19qFDt8QtDhxEpvR4vxYZaMkKtWmOThoKvHHux/X98SO7cShbHSsj3R0j8/Hc899znu+3mOOiFQcx13FF7jpICKOA0AAcLrnFHieB8/zUCgU4HkFFDwPXpF68jw4jgfPceA4DuA4mQUEAiUJSUoimZRCIpGQnskEEokkkskEy0tSkpUnIrkxLH47YGPlJgAAB4BkcRUKhRR4xUxcoZDyeEVKZA4cx6frmxInJWxSEjORSIX0eCJT5GQyyYRNF/p2wcbKTVACyBRXoYQy4ymFk8dPwePxYHBwEFPRqQyiJaolWLt2LYzfMaLi0UeQSCrA83GpQxI8OHCQ+nIGlCRpJADSGOIkcUd8frjfcSMYDGaU1+l0EKoErFpTVtDHfV54OAD0p7PvQalUMlGVSqUUFEr0iudge96GiYmJghqk0WjQ+ItGlJffj3gigUQijng8FRJxxOMJZuHplvzxxMc40vUiRoOjAACDwQC9Xg8ACAQCEEURAFCiK8GO2h342te/mvP9Vz7+BC85Xvpc8Gys3CQJ/H7vGSgVyhlhlYuwSKlEa3Mb3MfcrIJarYYgCNBqtSgvLwcA9Pb2IhwOw+12Y3JykpUVTAIaGndi8R2LEY/HEYvHEY/HEI/HM6cMSuJq5Cp++vSziEajEAQBdrsdWq02o7HhcBj19fVwu91QqVRot7VnfdS16DXU7qj73PDI8zCd7TtLff3nqN/XT0MBH134IECCSSBIg5fUajW1tbVRJBKhueB0OkmtVrN6JboSOt/fR0OBIfIO9VNf/zny9J2lM2IPvffnd+l0zyk68e5x0ul0BIDMZnMGn8wz+x0y99vH/5ARSnQlOXkcdjs9/tjmz8QzNjZG3v5+8vb309jYWEE8AIgHAEVqDlYqFFAqMi1Xr9fD7/ejtbUVarU6axikw2w2IxQKsaE0GhxFp+1wxlzOsx2JtBvxeX0IBoMQBAGNu3bNyS+/QxAEjAZHMeLzs/QRnx+jwVGsKivDvfesY+m/6urC8zYbTp4+jd0NuzA+Pl4QT3p7fv/aazCsvw81m7egZvMWGNbfhzM9PXPypIP6vH3kHfLSyIVhchxxMMvR6/XzWm0uRCIR0uv1jMfxooNG/jpCA8NeOu/tI895yYrfff+PpCuVrDcUChXMHwqFCADpdDpmLfIoKPnGN2nFMi2Vf3s9Pf3jJwkAtbW10cEDBwkAHX377YJ45PZ4+/slvrvX0Y+2WahxZwOtWKalFcu05LDb8/LksGDJim3P2wBI863T6ZzXanNBrVbD4/GwuraDttReOmXBXGpPzfMIXgrCYDBkzXEWi4VZucViycjTarUwGAwZK3swKPFUVFRg46ZNGB8fx5meHqxYpsW/pq5h6xNbcenDD1FVXV0Qj1arRTQaRdB/EQBQKfwAv3V1o6PzEPa0NAMAXN3OvDwyeACpYSttxeTdQl1dHRvqNwK1Wg273Q4AmJiYwMkTp9iBRRKZY9u0XO9xuVw54zJy1dHr9bAd7sRBWwfeeOtNVFVX46PLYdgOd2Lp0qVwdTsRvHSpIB4Z7S9IBveb373K0r734IMAgGg0ik+uXMnLA6QElq3J4/EAkMSpra1lhURRhMlkgtFohNFohNVqzZvX1dXF8sxmM7Niz1lPmvVy4PgZgf8TuPuee9DReQhjY2No3NmAsm/diXeOHkXFwxtQs3kLm0PngkqlgsPhwB2qJXjllVdylvn00+tzckgHDY4Dz3EYHBwEAAiCwIQRRRFGozGjkiiKEEURtbW1MJlMWXkXLlyA0+lkXC6XC4ODg9IJMCWsJK4kcCAQyGqY2Wxmlms2m7Pyc9WZnRaNRnGmpwcdnYdgvmRBxcMbAAADXi8GvF4UFxeDW6Sck2eRUonGhgbcsXgxSxvwell8mXZZ3vYAzIKlD5ZPaCtXrmQF6uvrAUjzTCgUgsfjgVarxbZt25gl6/V6hEIhHDt2LGOPDIDFp6JT0nvApT2B0tJSiKKIcDic0TC5g2bHAWkPKooidDodS9PpdFk8P3nyKbTv3YdVd65EzeYt+OhyGFXV1ejoPISarVsL4hkfH0dbSysef2wz2vfuQ/vefWhpagIA7Nq9O297MgQGh4zhmj6fyD1jNpvZZB4KhWA2m1mefPgQBIHlyUhfvCSjzTw2b3xMWnTkjiwEclmhSmBpcjydp6PzECzbt+PKP/6Ov4VCcNjt2NPSjKrqalj370PZmtXz8li2b4dl+3YAgLO7G87ublz/9Do2VDyCLTWP522PjOzx8V/GuvXroCvVwe12w2KxZFnrbMinpxJdSYYfYNWaMpToSjJ4iouLsaelGV9avBgjw8P4WV3dDfHsaWnG9x96CJcvhwFIo05XWjonjwzJginTi5U+n8jW7HK5MDk5iUAggOXLl8NqtbI8+ZicnicjfchKZzN5ezyD5rZmqFQquFwumEwmVofSvGzhcBgmkwldXV1QqVTYUbsj62N2/7IxJ8/OXQ144603PxPP6jWrUVVdjarqauhKSwviAVLOHt/IIIqKirD+3vswFZ2C2WxmluR2u7MWMkCaMiorK/PmyfXr6+vR1dWFJaolOP+XPkxPT2M6No1YPIZYLC45gxJxRP45iQPWA2wvqdfrodfroVarIYoi6/T5nDTXotfQccDGnDS3koc5ewaGB1BUVARrixXuY26o1WpEIhFWUBRFOBwO5swxGAxobW1lHeBwOFjZ9DwAWL58OcLhMB747gM4bO/E9elpxGYJLPuNk4kkfAM+HDt6692MN4OHCewd6seiRUU4f+48ap+V9r92ux11aXPWjcDlcrFT2P4D+/HwhocwHZvGdCyGeCyGWHyWwDkc8P/L2Fi5SZqD5Ssdg7EcGo0GAGC1WrO2TgvB5OQkW101Gk3KEZ+6xUgmkUzNxZS6crpdwQNAkpJIJKR7tH3tewFIAplMpgwfb6GYnJyE0WhkdRt/3physCdmRE67MmKL7KzF9nYBAaCm1ibyjQxS4KKfnvjhExkeNb/fvyBPV7onTTAJFLjoJ9/IIO1t38vS/4/CzI+652ppyO+jwA043CORCLW1tWU43NesXUMXPgjQUMBHTa1Nt/pDb0lg1/YymlubUGkSoFQqcdh2GK+/9jrLW+iVkXVfG+LxOAYGBvHMU89gPqRPD/LJkogyTpmzf+fjyVdHfkehjqZ8bVoQx+zQ3NokWfJFP3W7XiWNRlNwj2k0GnIccVDgop+GAj56+dcvF1yXiOaMp6fNxzNf/UK4cpVZKEeWBcuoe64WNVtr2FWP6OnFieMn5ry2f1R4FAZDObvQPH78BPZb9xfQxxJyWUt63kKsjuO4vM+FYLa1zl6E5+PLKzAArLqrDM2tLSheqkm7jUh3NyJj3yr/8WRifBwvdNpxrvfcgj/ms0wN+XgAZAm8ULFzdVIhHHMKLOP+8vuxoWID7lp9F76iUqX+OiW/WXrR1WgUw0PDOH3y9IKFTf8I1rCbYMG5fi9k/pxvTbhpAn+BGwdPRF++1Y24XUFE3L8BbcIUMlzaN08AAAAASUVORK5CYII=" /></a>
+  </div>
+</div>
+    <div class="main">
+    <header class="post-header">
+  <h1 class="post-title"><a href="/blog/2014/07/22/cudastart.html">【Cuda】入门和gpu相关知识</a></h2>
+  <p class="post-meta">
+    <i class="fa fa-calendar"></i>
+    2014年07月22日
+    <i class="space"></i>
+    <i class="fa fa-tags"></i>
+    <a class="post-category" href="/page/category.html#programming languages">programming languages</a>
+  </p>
+</header>
+
+<div class="post-main">
+	<h5 id="gpu">1.关于GPU</h5>
+
+<p>GPU是图形处理单元(Graphic Processing Unit)的简称，用多个GPU处理器来并行计算</p>
+
+<h5 id="cuda">2.Cuda</h5>
+
+<p>cuda采用的是C/C++编译器为前端，以C/C++语法为基础设计，有片内共享存储器，CUDA软件栈包含两个层次，一个是驱动层的API,这类函数以cu开关，一个是运行层的API，以cuda开头，运行层API是建立在驱动层API之上的，是对驱动层API的封装，我们的开发都是优先使用运行时API，就说尽量用cuda开头的函数</p>
+
+<h5 id="cuda-1">3.Cuda语法</h5>
+
+<p><strong>函数类型限定符</strong>，用来确定函数是在CPU还是在GPU上执行，以及这个函数是从CPU调用还是从GPU调用。</p>
+
+<pre><code>__device__，__device__表示从GPU上调用，在GPU上执行；
+__global__，__global__表示在CPU上调用，在GPU上执行，也就是所谓的内核(kernel)函数；内核主要用来执行多线程调用。
+__host__，__host__表明在CPU上调用，在CPU上执行，这是默认时的情况，也就是传统的C函数。CUDA支持__host__和__device__的联用，表示同时为主机和设备编译。此时这个函数不能出现多线程语句
+</code></pre>
+
+<p><strong>变量类型限定符</strong>，用来规定变量存储什么位置上。在传统的CPU程序上，这个任务由编译器承担。在CUDA中，不仅要使用主机端的内存，还要使用设备端的显存和GPU片上的寄存器、共享存储器和缓存。在CUDA存储器模型中，一共抽象出来了8种不同的存储器。复杂的存储器模型使得必须要使用限定符要说明变量的存储位置。</p>
+
+<pre><code>__device__，__device__表明声明的数据存放在显存中，所有的线程都可以访问，而且主机也可以通过运行时库访问；
+__shared__，__shared__表示数据存放在共享存储器在，只有在所在的块内的线程可以访问，其它块内的线程不能访问；
+__constant__，__constant__表明数据存放在常量存储器中，可以被所有的线程访问，也可以被主机通过运行时库访问；
+</code></pre>
+
+<p>如果在GPU上执行的函数内部的变量没有限定符，那表示它存放在寄存器或者本地存储器中，在寄存器中的数据只归线程所有，其它线程不可见。如果SM的寄存器用完，那么编译器就会将本应放到寄存器中的变量放到本地存储器中。</p>
+
+<p>执行配置运算符«&lt; »&gt;，用来传递内核函数的执行参数。执行配置有四个参数，第一个参数声明网格的大小，第二个参数声明块的大小，第三个参数声明动态分配的共享存储器大小，默认为0，最后一个参数声明执行的流，默认为0。</p>
+
+<p><strong>内建变量</strong>，用于在运行时获得网格和块的尺寸及线程索引等信息</p>
+
+<pre><code>gridDim, gridDim是一个包含三个元素x,y,z的结构体，分别表示网格在x,y,z三个方向上的尺寸，虽然其有三维，但是目前只能使用二维；
+blockDim, blockDim也是一个包含三个元素x,y,z的结构体，分别表示块在x,y,z三个方向上的尺寸，对应于执行配置中的第一个参数，对应于执行配置的第二个参数；
+blockIdx, blockIdx也是一个包含三个元素x,y,z的结构体，分别表示当前线程所在块在网格中x,y,z三个方向上的索引；
+threadIdx, threadIdx也是一个包含三个元素x,y,z的结构体，分别表示当前线程在其所在块中x,y,z三个方向上的索引；
+warpSize，warpSize表明warp的尺寸，在计算能力为1.0的设备中，这个值是24，在1.0以上的设备中，这个值是32。
+</code></pre>
+
+<p>其中__syncthreads()是CUDA的内置命令，其作用是保证block内的所有线程都已经运行到调用__syncthreads()的位置</p>
+
+<p>CUDA程序的基本模式：</p>
+
+<pre><code>分配内存空间和显存空间
+初始化内存空间
+将要计算的数据从内存上复制到显存上
+执行kernel计算
+将计算后显存上的数据复制到内存上
+处理复制到内存上的数据
+</code></pre>
+
+<h5 id="cuda-2">4.CUDA编程模型</h5>
+
+<p>它支持大量的线程级并行计算，CUDA编程模型将CPU作为主机（Host），而将GPU做为协处理器（Coprocessor），或者设备（Device），以CPU来控制程序整体的串行逻辑和任务调度，而让GPU来运行一些能够被高度线程化的数据并行部分。即让GPU与CPU协同工作，更确切的说是CPU控制GPU工作。GPU只有在计算高度数据并行任务时才发挥作用。一般而言，ＣＵＤＡ并行程序包括串行计算部分和并行计算部分，并行计算部分称之为内核（Kernel），内核只是一个在ＧＰＵ上执行的数据并行代码段。理想情况下，串行代码的作用应该只是清理上个内核函数，并启动下一个内核函数。</p>
+
+<h5 id="cuda-3">5.CUDA线程层次</h5>
+
+<p>CUDA的关键特性：线程按照粗粒度的线程块和细粒度的线程两个层次进行组织、在细粒度并行的层次通过共享存储器和栅栏同步实现通信，这就是CUDA的双层线程模型。对于程序员来说，他们需要将任务划分为互不相干的粗粒度子问题(最好是易并行计算)，再将每个子问题划分为能够使用线程处理的问题。内核函数实质上是以块为单位执行的。</p>
+
+<h5 id="section">6.存储器组织</h5>
+
+<p>CUDA的存储器由一系列不同的地址空间组成。其中，shared memory和register位于GPU片内，Texture memory和Constant memory可以由GPU片内缓存加速对片外显存的访问，而Local memory和Device memory位于GPU片外的显存中</p>
+
+<p>在kernel中不允许有C++的类、继承以及在基本块中定义变量等语法</p>
+
+<p>fprintf 用于文件操作，</p>
+
+<p>纹理存储器（texture memory）是一种只读存储器，由GPU用于纹理渲染的的图形专用单元发展而来，因此也提供了一些特殊功能。纹理存储器中的数据位于显存，但可以通过纹理缓存加速读取。在纹理存储器中可以绑定的数据比在常量存储器可以声明的64K大很多，并且支持一维、二维或者三维纹理。在通用计算中，纹理存储器十分适合用于实现图像处理或查找表，并且对数据量较大时的随机数据访问或者非对齐访问也有良好的加速效果。</p>
+
+<p>参考：<a href="http://blog.csdn.net/maosong00/article/details/16828399">http://blog.csdn.net/maosong00/article/details/16828399</a></p>
+
+</div>
+<div class="share">
+  <div class="bdsharebuttonbox">
+    <a href="#" class="bds_more" data-cmd="more"></a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+  </div>
+  <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"1","bdMiniList":["qzone","tsina","weixin","sqq"],"bdPic":"","bdStyle":"0","bdSize":"16"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='/res/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+</div>
+<div class="pagination">
+	
+	<a class="pagination-item newer" href="/blog/2014/06/26/dl1baseconcept.html"><i class="fa fa-arrow-left"></i>&nbsp;&nbsp;[DeepLearning]深度学习之一基础概念</a>
+	
+
+	<a class="pagination-item older" href="/blog/2015/05/07/cafferead.html">[caffe]的项目架构和源码解析&nbsp;&nbsp;<i class="fa fa-arrow-right"></i></a>
+	
+</div>
+    
+<i class="space"></i>
+
+<!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="/blog/2014/07/22/cudastart.html" data-title="【Cuda】入门和gpu相关知识" data-url="/blog/2014/07/22/cudastart.html"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"chenrudan"};
+		(function() {
+ 			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			|| document.getElementsByTagName('body')[0]).appendChild(ds);
+											
+ 		})();
+		</script>
+	<!-- 多说公共JS代码 end -->
+	
+
+    <footer>Copyright&nbsp;&copy;&nbsp;2015 <a href="chenrudan.github.io">陈汝丹</a><br/><i class="fa fa-cogs" style="color:blueviolet;">&nbsp;</i>Powered by <a href="http://jekyllrb.com/" target="_blank">Jekyll</a></footer>
+    </div>
+  </div>    
+  <div id="top"><a id="rocket" href="javascript:;" title="返回顶部"><i></i></a></div>
+  
+</body>
+</html>
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+   (i[r].q=i[r].q||[]).push(arguments)
+ },i[r].l=1*new Date();a=s.createElement(o),
+   m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-62560044-1', 'auto');
+    ga('send', 'pageview');
+
+</script>
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	                  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+					                            
+	});
+</script>
+<script type="text/javascript"
+  src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>

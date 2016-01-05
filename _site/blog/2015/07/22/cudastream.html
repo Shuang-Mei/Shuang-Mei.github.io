@@ -1,0 +1,278 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta name="description" content="听见下雨的声音">
+  <meta name="author" content="陈汝丹">
+  <meta name="keywords" content="【CUDA】cuda stream和event相关内容, 陈汝丹, 陈汝丹">
+  <title>【CUDA】cuda stream和event相关内容 - 陈汝丹</title>
+  <link rel="canonical" href="chenrudan.github.io/blog/2015/07/22/cudastream.html">
+  <link rel="icon" href="/res/img/favicon.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="/res/img/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="/res/css/public.css">
+  <link rel="stylesheet" href="/res/css/light.css">
+  <script src="/res/js/light.js"></script>
+  <script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+</head>
+<body>
+  <div id="blog">
+    <div class="sidebar">
+  <div class="profilepic">
+    <a href="/"><img src="http://7xkmdr.com1.z0.glb.clouddn.com/90fba609961616fae2b927.jpg" alt="logo"></img></a>
+  </div>
+  <h1 class="title"><a href="/">陈汝丹</a></h1>
+  <h2 class="sub-title">个人博客</h2>
+  <nav id="nav">
+    <ul>
+    
+      <li><a href="/page/timing.html"><i class="fa fa-clock-o"></i>&nbsp;时间轴</a></li>
+    
+      <li><a href="/page/category.html"><i class="fa fa-tags"></i>&nbsp;分类</a></li>
+    
+      <li><a href="/page/about.html"><i class="fa fa-paper-plane-o"></i>&nbsp;关于</a></li>
+    
+    </ul>
+  </nav>  
+  <nav id="sub-nav">
+    <a class="weibo " href="http://weibo.com/u/3842815916" title="新浪微博" target="_blank"><i class="fa fa-weibo"></i></a>
+    <a class="github" href="https://github.com/chenrudan" title="GitHub" target="_blank"><i class="fa fa-github fa-2x"></i></a>
+    <a class="rss" href="/page/feed.xml" title="RSS订阅" target="_blank"><i class="fa fa-rss"></i></a>
+  </nav>
+  <div id="license">
+    <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/cn/" target="_blank" title="本站所有作品采用：&#10;知识共享《署名 非商业性使用 相同方式共享 3.0》&#10;进行许可" >
+    <img alt="License" height="31" width="88" src="data:image/png;base64,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" /></a>
+  </div>
+</div>
+    <div class="main">
+    <header class="post-header">
+  <h1 class="post-title"><a href="/blog/2015/07/22/cudastream.html">【CUDA】cuda stream和event相关内容</a></h2>
+  <p class="post-meta">
+    <i class="fa fa-calendar"></i>
+    2015年07月22日
+    <i class="space"></i>
+    <i class="fa fa-tags"></i>
+    <a class="post-category" href="/page/category.html#programming languages">programming languages</a>
+  </p>
+</header>
+
+<div class="post-main">
+	<p>本文主要理解CUDA streams和相关的概念，有的概念翻译成中文反而无法体现它的意思，因此基本上还是用英文。主要参考了《The CUDA Handbook》这本书。</p>
+
+<p><strong>contexts</strong></p>
+
+<p>首先介绍contexts，它类似于cpu中的进程，它作为一个容器，管理了所有对象的生命周期，大多数的CUDA函数调用需要context。这些对象如下：</p>
+
+<pre><code>所有分配内存
+Modules，类似于动态链接库，以.cubin和.ptx结尾
+CUDA streams，管理执行单元的并发性
+CUDA events
+texture和surface引用
+kernel里面使用到的本地内存（设备内存）
+用于调试、分析和同步的内部资源
+用于分页复制的固定缓冲区
+</code></pre>
+
+<p>cuda runtime（软件层的库）不提供API直接接入CUDA context，而是通过<strong><em>延迟初始化</em></strong>（deferred initialization）来创建context，也就是lazy initialization。具体意思是在调用每一个CUDART库函数时，它会检查当前是否有context存在，假如需要context，那么才自动创建。也就是说需要创建上面这些对象的时候就会创建context。创建的这个context的特性跟程序之间给的要求有关，例如cudaSetDevice()（线程设置当前的context，这个函数并不需要context存在），cudaSetDeviceFlags()等。此处，可以显式的控制初始化，即调用cudaFree(0)，强制的初始化。cuda runtime将context和device的概念合并了，即在一个gpu上操作可看成在一个context下。因而cuda runtime提供的函数形式类似cudaDeviceSynchronize()而不是与driver API 对应的cuCtxSynchronize()。应用可以通过驱动API来访问当前context的栈。与context相关的操作，都是以cuCtxXXXX()的形式作为driver API实现。</p>
+
+<p>当context被销毁，里面分配的资源也都被销毁，一个context内分配的资源其他的context不能使用。在driver API中，每一个cpu线程都有一个<strong><em>current context</em></strong>的栈，新建新的context就入栈。针对每一个线程只能有一个出栈变成可使用的current context，而这个游离的context可以转移到另一个cpu线程，通过函数cuCtxPushCurrent/cuCtxPopCurrent来实现。</p>
+
+<h4 id="cuda-streams">1.CUDA streams</h4>
+
+<p>CUDA streams用来管理执行单元的并发，在一个流中，操作是串行的按序执行的，但是在不同的流中操作就可以同时执行，从而完成并发操作。其中包括如下一些操作：</p>
+
+<pre><code>管理GPU、CPU的并发
+当流处理器在执行kernel时可以调用内存复制引擎同时进行内存复制
+（不同？）核函数的并发
+多GPU的并发
+</code></pre>
+
+<p>并发的例子如下，摘自<a href="http://on-demand.gputechconf.com/gtc-express/2011/presentations/StreamsAndConcurrencyWebinar.pdf">http://on-demand.gputechconf.com/gtc-express/2011/presentations/StreamsAndConcurrencyWebinar.pdf</a></p>
+
+<p>代码1下面的操作就是同步的，没有异步的过程</p>
+
+<pre><code>cudaMalloc ( &amp;dev1, size ) ;
+double* host1 = (double*) malloc ( &amp;host1, size ) ;
+…
+cudaMemcpy ( dev1, host1, size, H2D ) ;
+kernel2 &lt;&lt;&lt; grid, block, 0 &gt;&gt;&gt; ( …, dev2, … ) ;
+kernel3 &lt;&lt;&lt; grid, block, 0 &gt;&gt;&gt; ( …, dev3, … ) ;
+cudaMemcpy ( host4, dev4, size, D2H ) ;
+</code></pre>
+
+<p>而代码2的操作是异步的，全并发的，在不同的四个流中完成不同的操作。</p>
+
+<pre><code>cudaStream_t stream1, stream2, stream3, stream4 ;
+cudaStreamCreate ( &amp;stream1) ;
+...
+cudaMalloc ( &amp;dev1, size ) ;
+cudaMallocHost ( &amp;host1, size ) ; 
+…
+cudaMemcpyAsync ( dev1, host1, size, H2D, stream1 ) ;
+kernel2 &lt;&lt;&lt; grid, block, 0, stream2 &gt;&gt;&gt; ( …, dev2, … ) ;
+kernel3 &lt;&lt;&lt; grid, block, 0, stream3 &gt;&gt;&gt; ( …, dev3, … ) ;
+cudaMemcpyAsync ( host4, dev4, size, D2H, stream4 ) ;
+...
+</code></pre>
+
+<p>同步异步的过程可以参考下图，其中的数字就代表了流编号。在第一张示例中，在一个stream 0上三个操作按序执行，第二张图中，第二个时间段，stream 1的kernel执行操作就和stream 2的内存复制操作时间重叠（overlap）了，从而做到了并发。</p>
+
+<p>摘自<a href="http://devblogs.nvidia.com/parallelforall/how-overlap-data-transfers-cuda-cc/">http://devblogs.nvidia.com/parallelforall/how-overlap-data-transfers-cuda-cc/</a></p>
+
+<p><img src="http://7xkmdr.com1.z0.glb.clouddn.com/cuda-stream.png" alt="1" height="60%" width="60%" hspace="200" /></p>
+
+<p>GPU上的一些操作是异步进行的，异步的意思就是gpu在它执行完任务之前就将控制全返回给主机线程，那么就能保证后面的cpu程序在执行的时候gpu的函数也在执行。也就是说在GPU上执行的一些操作和CPU上执行的函数能够异步进行。这些操作大致如下：</p>
+
+<pre><code>启动核函数
+在同一个设备上的内存复制
+小于64KB内存从主机复制到设备
+后缀带有Async的复制函数
+调用内存设置函数（设置共享内存、L1缓存大小等）
+</code></pre>
+
+<p>在cuda7版本之前，没有显式指定流，空流（默认流）会被隐式指定，它要同步设备上的所有操作。一个设备会产生一个空流。其它流的工作完成之后空流的工作才能开始，空流工作完成后其它流才能开始。cuda7版本增加了新的特性，可以选择每一个主机线程使用独立的空流，即一个线程一个空流，避免了原来空流的按序执行。<a href="http://devblogs.nvidia.com/parallelforall/gpu-pro-tip-cuda-7-streams-simplify-concurrency/">http://devblogs.nvidia.com/parallelforall/gpu-pro-tip-cuda-7-streams-simplify-concurrency/</a></p>
+
+<pre><code>//启动每个线程一个空流的方法
+//方法1
+nvcc --default-stream per-thread
+//方法2，在include CUDA头文件之前
+#define CUDA_API_PER_THREAD_DEFAULT_STREAM
+</code></pre>
+
+<h4 id="cuda-events">2.CUDA events</h4>
+
+<p>CUDA events可以用来控制同步，包括cpu/gpu的同步、gpu上不同engine的同步和gpu之间的同步。此外可以用来检查gpu的操作时长。它能够向CUDA stream进行记录（record），cpu会等待event记录的这个地方完成才能执行下一步。</p>
+
+<p>例如用来计算程序运行时间的例子，省略掉了初始化的过程。cudaEventRecord的第二个参数是cudaStream_t stream = 0 。</p>
+
+<pre><code>cudaEventRecord(start, 0);
+for (int i = 0; i &lt; 2; ++i) {
+    cudaMemcpyAsync(inputDev + i * size, inputHost + i * size,
+                 size, cudaMemcpyHostToDevice, stream[i]);
+    MyKernel&lt;&lt;&lt;100, 512, 0, stream[i]&gt;&gt;&gt;
+                  (outputDev + i * size, inputDev + i * size, size);
+    cudaMemcpyAsync(outputHost + i * size, outputDev + i * size,
+                 size, cudaMemcpyDeviceToHost, stream[i]);
+}
+cudaEventRecord(stop, 0);
+cudaEventSynchronize(stop);
+float elapsedTime;
+cudaEventElapsedTime(&amp;elapsedTime, start, stop);
+</code></pre>
+
+<table>
+  <thead>
+    <tr>
+      <th>不同的同步函数原型</th>
+      <th>函数意义</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>__host__ ​cudaError_t cudaEventSynchronize(cudaEvent_t event)</td>
+      <td>等待event完成，才执行下一段</td>
+    </tr>
+    <tr>
+      <td>CUresult cuEventSynchronize(CUevent hEvent)</td>
+      <td>等待event完成，才执行下一段</td>
+    </tr>
+    <tr>
+      <td>__host__ ​ __device__ ​cudaError_t cudaDeviceSynchronize(void)</td>
+      <td>等待device上所有操作完成</td>
+    </tr>
+    <tr>
+      <td>CUresult cuCtxSynchronize(void)</td>
+      <td>等待context中所有操作完成，driver API对应cudaDeviceSynchronize()</td>
+    </tr>
+    <tr>
+      <td>__host__ ​cudaError_t cudaThreadSynchronize(void)</td>
+      <td>是cudaDeviceSynchronize的一个弃用版本，意义一样但是现在不用这个了</td>
+    </tr>
+    <tr>
+      <td>__host__ ​cudaError_t cudaStreamSynchronize(cudaStream_t stream)</td>
+      <td>等待传入的流中的操作完成</td>
+    </tr>
+    <tr>
+      <td>CUresult cuStreamSynchronize(CUstream hStream)</td>
+      <td>等待传入的流中的操作完成</td>
+    </tr>
+  </tbody>
+</table>
+
+
+</div>
+<div class="share">
+  <div class="bdsharebuttonbox">
+    <a href="#" class="bds_more" data-cmd="more"></a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+  </div>
+  <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"1","bdMiniList":["qzone","tsina","weixin","sqq"],"bdPic":"","bdStyle":"0","bdSize":"16"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='/res/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+</div>
+<div class="pagination">
+	
+	<a class="pagination-item newer" href="/blog/2015/05/07/cafferead.html"><i class="fa fa-arrow-left"></i>&nbsp;&nbsp;[caffe]的项目架构和源码解析</a>
+	
+
+	<a class="pagination-item older" href="/blog/2015/08/04/dl5tricks.html">[DeepLearning]深度学习之五常见tricks&nbsp;&nbsp;<i class="fa fa-arrow-right"></i></a>
+	
+</div>
+    
+<i class="space"></i>
+
+<!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="/blog/2015/07/22/cudastream.html" data-title="【CUDA】cuda stream和event相关内容" data-url="/blog/2015/07/22/cudastream.html"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"chenrudan"};
+		(function() {
+ 			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			|| document.getElementsByTagName('body')[0]).appendChild(ds);
+											
+ 		})();
+		</script>
+	<!-- 多说公共JS代码 end -->
+	
+
+    <footer>Copyright&nbsp;&copy;&nbsp;2015 <a href="chenrudan.github.io">陈汝丹</a><br/><i class="fa fa-cogs" style="color:blueviolet;">&nbsp;</i>Powered by <a href="http://jekyllrb.com/" target="_blank">Jekyll</a></footer>
+    </div>
+  </div>    
+  <div id="top"><a id="rocket" href="javascript:;" title="返回顶部"><i></i></a></div>
+  
+</body>
+</html>
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+   (i[r].q=i[r].q||[]).push(arguments)
+ },i[r].l=1*new Date();a=s.createElement(o),
+   m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-62560044-1', 'auto');
+    ga('send', 'pageview');
+
+</script>
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+	                  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+					                            
+	});
+</script>
+<script type="text/javascript"
+  src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
