@@ -251,6 +251,8 @@ $$
 \dot{z} & = -\beta z + xy
 \end{aligned}
 $$
+
+
 在Sublime Text 2中使用命令：
 ![](http://i.niupic.com/images/2016/01/11/l2Bdfh.bmp)
 
@@ -264,6 +266,10 @@ Ctrl+Alt+C：复制为HTML文件
 ![](http://chuantu.biz/t2/24/1452519913x-1376436574.bmp)
 
 ###**（mathjax语法与latex稍有不同，直接采用CEdit工具生成公式然后保存图片也是可以的，至于哪个更好用那就是仁者见仁智者见智了）**
+
+免费图片上传网站：
+http://chuantu.biz/
+https://www.niupic.com/index.html
 
 **感谢简书作者的分享**
 
