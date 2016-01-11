@@ -254,13 +254,14 @@ $$
 
 
 在Sublime Text 2中使用命令：
-![](http://i.niupic.com/images/2016/01/11/l2Bdfh.bmp)
 
 Ctrl+Alt+O：在浏览器中预览
 
 Ctrl+Alt+X：输出为HTML文件
 
 Ctrl+Alt+C：复制为HTML文件
+
+![](http://i.niupic.com/images/2016/01/11/l2Bdfh.bmp)
 
 图片效果如下：
 ![](http://chuantu.biz/t2/24/1452519913x-1376436574.bmp)
