@@ -1,7 +1,7 @@
 ---
 layout: post
-title: "[caffe]的项目架构和源码解析"
-description: "阅读caffe的源代码的一些总结。Caffe是一个基于c++/cuda语言的深度学习框架，开发者能够利用它自由的组成自己想要的网络。目前支持卷积神经网络和全连接神经网络（人工神经网络）。Linux上，c++可以通过命令行来操作接口，matlab、python有专门的接口，运算支持gpu也支持cpu，目前版本能够支持多gpu，但是分布式多机版本仍在开发中。大量的研究者都在采用caffe的架构，并且也得到了很多有效的成果。2013年9月-12月，贾扬清在伯克利大学准备毕业论文的时候开发了caffe最初的版本，后期有其他的牛人加入之后，近两年的不断优化，到现在成了最受欢迎的深度学习框架。近期，caffe2也开源了，但是仍旧在开发。本文主要基于源代码的层面来对caffe进行解读，并且给出了几个自己在测试的过程中感兴趣的东西。"
+title: "关于markdown语法及latex公式的编辑"
+description: "摸索了一段时间，很遗憾，markdown确实不支持latex公式的编辑和编译，采用markdownpad进行公式的编辑一直就是一个揪心的问题，这里首先简单介绍了markdown常用的语法，然后采用sublime+mathjax提供了一种替代的公式插入方法，仅供参考."
 category: 'project experience'
 ---
 
