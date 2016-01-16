@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "关于markdown语法及latex公式的编辑"
-description: "摸索了一段时间，很遗憾，markdown确实不支持latex公式的编辑和编译，采用markdownpad进行公式的编辑一直就是一个揪心的问题，这里首先简单介绍了markdown常用的语法，然后采用sublime+mathjax提供了一种替代的公式插入方法，仅供参考."
+description: "在machine learning很多问题中，我们最终往往要求解某个函数的最优值。用数学术语表示就是，给定一个函数 $f: R^{n} \rightarrow R$，我们需要求 $x \in R^{n}$使得$f(x)$ 取得最小（大）值。例如least-square, logistic regression, linear regression, svm等等，这类问题统称为优化问题。"
 category: 'project experience'
 ---
 
