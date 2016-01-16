@@ -1,9 +1,7 @@
 ---
 layout: post
-title: "凸优化(Convex Optimization)"
-description: "在machine learning的很多问题中，我们最终往往要求解某个函数的最优值。用数学术语表示就是，给定一个函数 $f: R^{n} \rightarrow R$，我们需要求 $x \in R^{n}$使得$f(x)$ 取得最小（大）值。例如least-square, logistic regression, linear regression, svm等等，这类问题统称为优化问题。
-在一般情况下，求解任意一个函数的全局最优值是很困难的。但是对于一种特定类型的函数——凸函数（convex function），我们可以很有效的求解其全局最优值。这里的“有效”是指在实际问题求解中，能在多项式复杂度的时间里求解。 人们将这类函数的最值问题称为凸优化问题（Convex Optimal Problem）。
-这篇博文主要是对凸优化领域进行了一个简单的描述，参考Stanford taught “convex optimization review” by Stephen Boyd"
+title: "关于markdown语法及latex公式的编辑"
+description: "摸索了一段时间，很遗憾，markdown确实不支持latex公式的编辑和编译，采用markdownpad进行公式的编辑一直就是一个揪心的问题，这里首先简单介绍了markdown常用的语法，然后采用sublime+mathjax提供了一种替代的公式插入方法，仅供参考."
 category: 'project experience'
 ---
 
