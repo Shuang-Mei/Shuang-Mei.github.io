@@ -1,7 +1,7 @@
 ---
 layout: post
-title: "关于markdown语法及latex公式的编辑"
-description: "在machine learning很多问题中，我们最终往往要求解某个函数的最优值。例如least-square, logistic regression, linear regression, svm等等，这类问题统称为优化问题。"
+title: "凸优化(Convex Optimization)"
+description: "在machine learning 很多问题中，我们最终往往要求解某个函数的最优值。用数学术语表示就是，给定一个函数 $f: R^{n} \rightarrow R$，我们需要求 $x \in R^{n}$使得$f(x)$ 取得最小（大）值。例如least-square, logistic regression, linear regression, svm等等，这类问题统称为优化问题。"
 category: 'project experience'
 ---
 
