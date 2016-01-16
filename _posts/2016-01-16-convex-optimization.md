@@ -29,7 +29,7 @@ $$\theta x+(1-\theta)y \in C.$$
 **（2）非负卦限$\quad$**  $R^{n}_{+}$,很显然也符合定义。
 
 **（3）范数球$\quad$**  $R^n$空间上的某个范数。
-（例如欧几里得空间的模为$\parallel x \parallel _{2} =\sqrt{\sum_{i=1}^{n}x_i^2}$.），集合${x:\parallel x\parallel \leq 1}$也是一个凸集。假设$x,y \in R^n$，同时$\parallel x\parallel \leq 1,\parallel y\parallel \leq 1$，并且$0 \leq \theta \leq 1$，有
+（例如欧几里得空间的模为$\parallel x \parallel_{2} =\sqrt{\sum_{i=1}^{n}x_i^2}$.），集合${x:\parallel x\parallel \leq 1}$也是一个凸集。假设$x,y \in R^n$，同时$\parallel x\parallel \leq 1,\parallel y\parallel \leq 1$，并且$0 \leq \theta \leq 1$，有
 
 $$\parallel \theta x+(1-\theta)y)\parallel\leq \parallel \theta x\parallel+\parallel(1-\theta)y\parallel=\theta\parallel x\parallel+(1-\theta)\parallel y\parallel\leq 1$$
 
@@ -51,10 +51,13 @@ $$\cap_{i=1}^k C_i = \{x:x \in C_i \vee i=1,...,k\}$$
 **凸函数定义：**一个函数$f:R^n\rightarrow R$是凸函数当且仅当其定义域$D(f)$是凸集，并且对于任意的$x,t\in D(f)$，$\theta \in R$并且$0\leq \theta\leq 1$都有
 
 $$f(\theta x+(1-\theta)y \leq \theta f(x)+(1-\theta)f(y)).$$
+
 也即是说，对于曲线上任意两点所连成的割线一定在函数曲线的上方，如下图所示：
 
 **凸函数一阶条件：**假设函数$f:R^n\rightarrow R$是一阶可导的，那么$f$是凸函数当且仅当，对任意的$x,y\in D(f)$都有：
+
 $$f(y)\geq f(x)+f'(x)(y-x)$$
+
 其中，$f(x)+f'(x)(y-x)$是$f(y)$在$x$处的一阶泰勒展开。
 
 **凸函数二阶条件：**假设函数$f:R^n\rightarrow R$是二阶可导的，那么$f$是凸函数当且仅当，对任意的$x\in D(f)$都有：
@@ -63,11 +66,17 @@ $$f''(x)\succeq 0$$
 
 ##2.2 Jensen不等式
 我们先看看凸函数定义中的不等式：
+
 $$f(\theta x+(1-\theta)y \leq \theta f(x)+(1-\theta)f(y)).$$
+
 其中$0\leq \theta\leq 1$，类似的可以推广到多个点的情况：
+
 $$f(\sum_{i=1}^k\theta_ix_i) \leq \sum_{i=1}k\theta_if(x_i).$$
+
 其中，$\sum_{i=1}^k = 1$并且$\theta_i \geq 0$,$\forall i$。如果将上式$\theta$看成是概率密度，那么可以将上式改写为：
+
 $$f(E(x)) \leq E(f(x))$$
+
 这个不等式称为Jenson不等式。
 
 ##2.3 凸函数举例
@@ -84,7 +93,10 @@ $$f(E(x)) \leq E(f(x))$$
 1. **范数$\quad$**对于$f:R^n\rightarrow R$的某些范数，如一范数或者二范数。这些范数是凸函数，但是不能采用凸函数的一阶或者二阶判断来证明，因为它并不是在所有地方都是可导的（如一范数在$x=0$出不可导）。
 
 1. **非负的凸函数加权和$\quad$**如果$f_x,f_2,...,f_k$都是凸函数，并且加权系数$w_1,w_2,...,w_k$都是非负的实数，那么
- $$f(x)=\sum_{i=1}^k(w_if_i(x))$$也是一个凸函数。
+
+$$f(x)=\sum_{i=1}^k(w_if_i(x))$$
+
+也是一个凸函数。
 
 
 
@@ -92,9 +104,13 @@ $$f(E(x)) \leq E(f(x))$$
 介绍了凸集合凸函数之后，现在就可以介绍凸优化问题了。
 
 **凸优化问题的一般形式为**
+
 $$min  \ \ f(x)$$
+
 $$s.t\ \ g_i(x) \leq 0,  i=1,...,m$$
+
 $$\ \ \ \      h_i(x) = 0,  i=1,...,m$$
+
 其中，$f$和$g_i$都是凸函数，$h_i$是仿射函数，$x$是优化变量。
 
 **凸优化问题的特例**
@@ -102,44 +118,64 @@ $$\ \ \ \      h_i(x) = 0,  i=1,...,m$$
 **LP问题**
 
 Linear Programming,$f$和$g_i$都仿射函数，形式如下：
+
 $$min\quad c^Tx+d$$
+
 $$\qquad s.t\quad Gx\preceq h,  i=1,...,m$$
+
 $$\ \ \ \ \qquad     Ax=b$$  
+
 其中，$x\in R^n$是优化变量，$c\in R^n, d\in R, G\in R^{m\times n}, h\in R^m, A\in R^{p\times n},b \in R^p$是模型的参数，"$\preceq$"表示每个元素不等。
 
 **QP问题**
 
 Quadratic Programming, 不等式约束函数$g_i$仍然是仿射函数，目标函数$f$是一个凸二次函数，形式如下：
+
 $$min\quad \frac{1}{2}x^TPx+c^Tx+d$$
+
 $$\qquad s.t\quad Gx\preceq h,  i=1,...,m$$
+
 $$\ \ \ \ \qquad     Ax=b$$  
+
 其中，$x\in R^n$是优化变量，$c\in R^n, d\in R, G\in R^{m\times n}, h\in R^m, A\in R^{p\times n},b \in R^p$是模型的参数，$P\in S_{+}^n$是一个半正定矩阵。
 (LP是QP问题的特例)
 
 **QCQP问题**
 
 Quadratic Constrained Quadratic Programming, 不等式约束函数$g_i$是一个凸二次函数，目标函数$f$也是一个凸二次函数，形式如下：
+
 $$min\quad \frac{1}{2}x^TPx+c^Tx+d$$
+
 $$\qquad s.t\quad \frac{1}{2}x^TQ_ix+r_i^Tx+s_i \leq 0,  i=1,...,m$$
+
 $$\ \ \ \ \qquad     Ax=b$$  
+
 其中，$x\in R^n$是优化变量，$c\in R^n, d\in R, G\in R^{m\times n}, h\in R^m, A\in R^{p\times n},b \in R^p$是模型的参数，$P\in S_{+}^n$是一个半正定矩阵。同时，$Q_i\in S_{+}^n, r_i \in R^n, s_i \in R$对于每一个$i=1,...,m$都满足。
 (QP是QCQP问题的特例)
 
 **SDP问题**
 
 Semidefinite Programming, 这是一个比之前几个凸优化问题都难的优化问题，但是它在机器学习研究中非常普遍，其形式如下：
+
 $$min\quad tr(CX)$$
+
 $$\qquad s.t\quad tr(A_iX) = b_i,  i=1,...,p$$
+
 $$\ \ \ \ \qquad     X\succeq 0$$  
+
 其中，$X\in S^n$是优化变量。
 (QCQP是SDP问题的特例)
 
 **SOCP问题**
 
 Second-order Cone Programming，二次锥规划问题，其形式如下：
+
 $$min\quad f^Tx$$
+
 $$\qquad s.t\quad \parallel A_ix+b_i\parallel_2 \leq c_i^Tx+d_i,  i=1,...,m$$
+
 $$\ \ \ \ \qquad     Fx=g$$  
+
 其中，$X\in S^n$是优化变量，$A_i \in R^{n_i\times n}, F\in R^{p\times n}$。不等式约束通常也被称为二次锥约束(SOC)。若$n_i = 0$，退化为LP问题，若$c_i = 0$，退化为QCQP问题。
 (QCQP是SDP问题的特例)
 
