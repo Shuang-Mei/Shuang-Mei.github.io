@@ -99,4 +99,4 @@ LP问题
 Linear Programming,$f$和$g_i$都仿射函数，形式如下：
 $$min c^Tx+d$$
 $$s.t\ \ Gx\preceq h,  i=1,...,m$$
-$$\ \ \ \      Ax=b,  i=1,...,m$$
+$$\ \ \ \      Ax=b,  i=1,...,m$$  
