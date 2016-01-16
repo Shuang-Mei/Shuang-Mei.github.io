@@ -1,8 +1,8 @@
 ---
 layout: post
 title: "凸优化(Convex Optimization)"
-description: "在machine learning 很多问题中，我们最终往往要求解某个函数的最优值。用数学术语表示就是，给定一个函数 $f: R^{n} \rightarrow R$，我们需要求 $x \in R^{n}$使得$f(x)$ 取得最小（大）值。例如least-square, logistic regression, linear regression, svm等等，这类问题统称为优化问题。"
-category: 'project experience'
+description: "在machine learning 很多问题中，我们最终往往要求解某个函数的最优值。例如least-square, logistic regression, linear regression, svm等等，这类问题统称为优化问题。这篇blog主要介绍了凸集，凸函数及凸优化问题。"
+category: 'basic learning'
 ---
 
 在machine learning 很多问题中，我们最终往往要求解某个函数的最优值。用数学术语表示就是，给定一个函数 $f: R^{n} \rightarrow R$，我们需要求 $x \in R^{n}$使得$f(x)$ 取得最小（大）值。例如least-square, logistic regression, linear regression, svm等等，这类问题统称为优化问题。
@@ -24,20 +24,24 @@ $$\theta x+(1-\theta)y \in C.$$
 
 凸集的实例： 以下列举几个简单的凸集实例
 
-**（1）所有$R^n$**  很显然，对任意给定的$x,y∈R^n$ 都有 $\theta x+(1−\theta)y\in R^n$。 
+**（1）所有$R^n\quad$** 很显然，对任意给定的$x,y∈R^n$ 都有 $\theta x+(1−\theta)y\in R^n$。 
 
-**（2）非负卦限**  $R^{n}_{+}$,很显然也符合定义。
+**（2）非负卦限$\quad$**  $R^{n}_{+}$,很显然也符合定义。
 
-**（3）范数球**  $R^n$空间上的某个范数。
+**（3）范数球$\quad$**  $R^n$空间上的某个范数。
 （例如欧几里得空间的模为$\parallel x \parallel _{2} =\sqrt{\sum_{i=1}^{n}x_i^2}$.），集合${x:\parallel x\parallel \leq 1}$也是一个凸集。假设$x,y \in R^n$，同时$\parallel x\parallel \leq 1,\parallel y\parallel \leq 1$，并且$0 \leq \theta \leq 1$，有
 
 $$\parallel \theta x+(1-\theta)y)\parallel\leq \parallel \theta x\parallel+\parallel(1-\theta)y\parallel=\theta\parallel x\parallel+(1-\theta)\parallel y\parallel\leq 1$$
 
-**(4)仿射子空间和多面体**  给定一个矩阵$A \in R^{m \times n}$和一个向量$b \in R^m$，对应的仿射子空间被定义为${x \in:Ax=b}$。相应的多面体空间为{$x\in R^n:Ax \preceq b$}，"$\preceq$"表示对应的元素不等。
+**（4）仿射子空间和多面体$\quad$**  给定一个矩阵$A \in R^{m \times n}$和一个向量$b \in R^m$，对应的仿射子空间被定义为${x \in:Ax=b}$。相应的多面体空间为{$x\in R^n:Ax \preceq b$}，"$\preceq$"表示对应的元素不等。
 
-**(5)凸集的交集**  假设$C_1,C_2,......C_k$都是凸集，它们的交集为$\cap_{i=1}^k C_i = \{x:x \in C_i \vee i=1,...,k\}$也是一个凸集，然而，凸集的并集却并不一定是凸集。
+**（5）凸集的交集$\quad$**  假设$C_1,C_2,......C_k$都是凸集，它们的交集为
 
-**(6)半正定矩阵**  所有的半正定矩阵的集合称为"半正定锥"，被表示为$\mathbf{S}_{+}^{n}$，也是一个凸集。 回顾一下，矩阵$A \in R^{n\times n}$是一个对称的半正定矩阵当且仅当$A = A^T$，并且对于所有的$x\in R^n$，$x^TAx\geq 0$。
+$$\cap_{i=1}^k C_i = \{x:x \in C_i \vee i=1,...,k\}$$
+
+也是一个凸集，然而，凸集的并集却并不一定是凸集。
+
+**（6）半正定矩阵$\quad$**  所有的半正定矩阵的集合称为"半正定锥"，被表示为$\mathbf{S}_{+}^{n}$，也是一个凸集。 回顾一下，矩阵$A \in R^{n\times n}$是一个对称的半正定矩阵当且仅当$A = A^T$，并且对于所有的$x\in R^n$，$x^TAx\geq 0$。
 
 #2. 凸函数及凸函数判定方法
 
@@ -68,20 +72,18 @@ $$f(E(x)) \leq E(f(x))$$
 
 ##2.3 凸函数举例
 
+1. **指数函数$\quad$**对于$f:R\rightarrow R$,$f(x)=e^{ax}$,$a\in R$。使用凸函数的二次判别，$f''(x)=a^2e^{ax}$，对于所有的$x$都是非负的。
 
+1. **负对数函数$\quad$**对于$f:R\rightarrow R$,$f(x)=-log(x)$,定义域$D(f)={x:x >0}$。使用凸函数的二次判别，$f''(x)=1/x^2 >0$，对于所有的$x$都成立。
 
-1. 指数函数  对于$f:R\rightarrow R$,$f(x)=e^{ax}$,$a\in R$。使用凸函数的二次判别，$f''(x)=a^2e^{ax}$，对于所有的$x$都是非负的。
+1. **仿射函数$\quad$**对于$f:R^n\rightarrow R$,$f(x)=b^Tx+c$,$b \in R^n,c\in R$。使用凸函数的二次判别，其Hessian矩阵为，$\bigtriangledown_x^2=0$，对于所有的$x$都成立。由于0矩阵既是半正定也是半负定矩阵，因此函数$f$既是凸函数也是凹函数。实际上，放射函数是仅有的一个既是凸函数也是凹函数的函数。
 
-1. 负对数函数  对于$f:R\rightarrow R$,$f(x)=-log(x)$,定义域$D(f)={x:x >0}$。使用凸函数的二次判别，$f''(x)=1/x^2 >0$，对于所有的$x$都成立。
-
-1. 仿射函数  对于$f:R^n\rightarrow R$,$f(x)=b^Tx+c$,$b \in R^n,c\in R$。使用凸函数的二次判别，其Hessian矩阵为，$\bigtriangledown_x^2=0$，对于所有的$x$都成立。由于0矩阵既是半正定也是半负定矩阵，因此函数$f$既是凸函数也是凹函数。实际上，放射函数是仅有的一个既是凸函数也是凹函数的函数。
-
-1. 二次函数  对于$f:R^n\rightarrow R$,$f(x)=\frac{1}{2}x^TAx+b^Tx+c$,对于半正定矩阵$A \in S^n,b\in R^n,c\in R$。这个函数的Hessian矩阵为
+1. **二次函数$\quad$**对于$f:R^n\rightarrow R$,$f(x)=\frac{1}{2}x^TAx+b^Tx+c$,对于半正定矩阵$A \in S^n,b\in R^n,c\in R$。这个函数的Hessian矩阵为
  $$\bigtriangledown_x^2f(x)=A$$由于$A$矩阵是一个半正定矩阵，因此函数$f$是一个凸函数。函数$f(x)=||x||_2^2=x^Tx$是二次函数的一个特例，它是一个严格的凸函数。
 
-1. 范数  对于$f:R^n\rightarrow R$的某些范数，如一范数或者二范数。这些范数是凸函数，但是不能采用凸函数的一阶或者二阶判断来证明，因为它并不是在所有地方都是可导的（如一范数在$x=0$出不可导）。
+1. **范数$\quad$**对于$f:R^n\rightarrow R$的某些范数，如一范数或者二范数。这些范数是凸函数，但是不能采用凸函数的一阶或者二阶判断来证明，因为它并不是在所有地方都是可导的（如一范数在$x=0$出不可导）。
 
-1. 非负的凸函数加权和  如果$f_x,f_2,...,f_k$都是凸函数，并且加权系数$w_1,w_2,...,w_k$都是非负的实数，那么
+1. **非负的凸函数加权和$\quad$**如果$f_x,f_2,...,f_k$都是凸函数，并且加权系数$w_1,w_2,...,w_k$都是非负的实数，那么
  $$f(x)=\sum_{i=1}^k(w_if_i(x))$$也是一个凸函数。
 
 
