@@ -5,13 +5,13 @@ paginate: 5
 paginate_path: page/:num
 
 blog:
-    name: 梅爽                                               # 博客名称
+    name: Shuang-Mei                                               # 博客名称
     description: 个人博客                                         # 博客描述
     title: 听见下雨的声音                                              # 网页标题
     url: Shuang-Mei.github.io                                        # 博客地址
     qiniu:                                               # 七牛云地址
 author:
-    name: 梅爽                                               # 作者名称
+    name: Shuang-Mei                                               # 作者名称
     email: 850762409@qq.com                                              # 邮箱地址
     weibo: http://www.weibo.com/u/2890605417/home?wvr=5                                              # 微博地址
     github: https://github.com/Shuang-Mei                                             # GitHub地址
