@@ -14,28 +14,28 @@ category: 'Datasets description'
 
 ### 2. Scene-15
 
-### Dataset links: [http://www-cvr.ai.uiuc.edu/ponce_grp/data/](http://www-cvr.ai.uiuc.edu/ponce_grp/data/)
+#### Dataset links: [http://www-cvr.ai.uiuc.edu/ponce_grp/data/](http://www-cvr.ai.uiuc.edu/ponce_grp/data/)
 ![](http://i.imgur.com/BdLcaZE.jpg)
 
 #### <font face="微软雅黑">This is a dataset of fifteen natural scene categories that expands on the thirteen category dataset released by Fei-Fei Li.</font>
 
 ### 3. Texture-25
 
-### Dataset links: [http://www-cvr.ai.uiuc.edu/ponce_grp/data/](http://www-cvr.ai.uiuc.edu/ponce_grp/data/)
+#### Dataset links: [http://www-cvr.ai.uiuc.edu/ponce_grp/data/](http://www-cvr.ai.uiuc.edu/ponce_grp/data/)
 ![](http://i.imgur.com/zz6MbXz.jpg)
 
 #### <font face="微软雅黑">The texture database features 25 texture classes, 40 samples each. All images are in grayscale JPG format, 640x480 pixels.</font>
 
 ### 4. Indoor-67
 
-### Dataset links: [http://web.mit.edu/torralba/www/indoor.html](http://web.mit.edu/torralba/www/indoor.html)
+#### Dataset links: [http://web.mit.edu/torralba/www/indoor.html](http://web.mit.edu/torralba/www/indoor.html)
 ![](http://i.imgur.com/ff62j7Q.jpg)
 
 #### <font face="微软雅黑">The database contains 67 Indoor categories, and a total of 15620 images. The number of images varies across categories, but there are at least 100 images per category. All images are in jpg format.</font>
 
 ### 5. Caltech-101
 
-### Dataset links: [http://www.vision.caltech.edu/Image_Datasets/Caltech101/](http://www.vision.caltech.edu/Image_Datasets/Caltech101/)
+#### Dataset links: [http://www.vision.caltech.edu/Image_Datasets/Caltech101/](http://www.vision.caltech.edu/Image_Datasets/Caltech101/)
 ![](http://i.imgur.com/Y3chY0s.jpg)
 
 #### <font face="微软雅黑">Pictures of objects belonging to 101 categories. About 40 to 800 images per category. Most categories have about 50 images. Collected in September 2003 by Fei-Fei Li, Marco Andreetto, and Marc 'Aurelio Ranzato.  The size of each image is roughly 300 x 200 pixels.</font>
