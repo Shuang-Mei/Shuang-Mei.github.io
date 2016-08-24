@@ -2,7 +2,7 @@
 layout: post
 title: "Multi-modal image classification"
 description: "Relative description of the datasets used in the paper."
-category: 'Datasets description'
+category: 'Datasets description' 
 ---
 
 ### 1. NUS-WIDE
