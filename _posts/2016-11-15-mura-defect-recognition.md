@@ -2,13 +2,15 @@
 ### This document provides related derivations for the sparse auto-encoder network model with an *KL* divergence constraint. Stochastic gradient descent algorithm is used for training this model.
 ---
 ### A three layer auto-encodernet work  is used as an example.
+
 ![](http://i65.tinypic.com/vrft6f.jpg)
 
 ### Loss function :
 
 <img src="http://www.forkosh.com/mathtex.cgi? \large L = \min\limits_{W,W',b,b'} \frac{1}{m} \sum\limits_{i=1}^{m}\|y_I^{(i)}-x_I^{(i)}\|^{2} + \lambda \sum\limits_{w\in{W,W'}}\|w\|_F^2
 + \beta\sum\limits_{i=1}^{N_H}KL(\rho\|\hat{\rho}_i),">
-+ 
+
+
 ### where (W,b) and (W',b') refer to coefficients in the encoding and decoding phases, <img src="http://www.forkosh.com/mathtex.cgi? \large N_H"> refers to the number of units in hidden layer. The *KL* divergence can be expanded as 
 
 <img src="http://www.forkosh.com/mathtex.cgi? \large KL(\rho\|\hat{\rho}_i) = \rho log\frac{\rho}{\hat{\rho}_i}+(1-\rho)log\frac{1-\rho}{1-\hat{\rho}_i},">
