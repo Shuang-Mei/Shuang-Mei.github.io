@@ -1,6 +1,7 @@
 
 ### This document provides related derivations for the sparse auto-encoder network model with an *KL* divergence constraint. Stochastic gradient descent algorithm is used for training this model.
 ---
+
 ### A three layer auto-encodernet work  is used as an example.
 
 ![](http://i65.tinypic.com/vrft6f.jpg)
