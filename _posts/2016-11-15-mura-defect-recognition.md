@@ -1,3 +1,10 @@
+---
+layout: post
+title: "Sparse auto-encoder with KL divergence"
+description: "Related derivations used in the paper."
+category: 'Related derivations' 
+---
+
 ### This document provides related derivations for the sparse auto-encoder network model with an *KL* divergence constraint. Stochastic gradient descent algorithm is used for training this model.
 ---
 
